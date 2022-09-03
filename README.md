@@ -23,6 +23,8 @@ The ssh server is holding all the configuration files for the machines. When you
 - `local_build.sh` iterates over each host configuration to run `dry-build`, but you can pass `build` as a parameter, this ensures each configuration work, and if you use this system as a substituter you can build their configurations to offload compilations on the clients
 - `utils/bento.nix` that have to be imported into each host configuration, it adds a systemd timer triggering a service looking for changes and potentially trigger a rebuild if any
 
+On the client, the system configuration is stored in `/var/bento/` and also contains scripts `update.sh` and `bootstrap.sh` used to look for changes and trigger a rebuild.
+
 # Layout
 
 Here is the typical directory layout for using **bento** for three hosts `router`, `nas` and `t470`:
