@@ -61,9 +61,10 @@ Here is the typical directory layout for using **bento** for three hosts `router
 # Workflow
 
 1. make configuraiton changes in some host in `hosts/` or a global include file in `utils` (you can rename it as you wish)
-2. OPTIONAL: run `./local_build.sh` to check the configurations are valid, use `./local_build.sh build` to build systems locally to serve them as a substituter (requires configuration on each client)
-3. run `./populate_chroot.sh`
-4. hosts will pickup changes and run a rebuild
+2. OPTIONAL: run `./local_build.sh` to check the configurations are valid
+3. OPTIONAL: run `./local_build.sh build` to build systems locally and make them available in the store. This is useful if you want to serve the result as a substituter (requires configuration on each client)
+4. run `./populate_chroot.sh`
+5. hosts will pickup changes and run a rebuild
 
 # TODO
 
