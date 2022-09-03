@@ -25,7 +25,7 @@ The ssh server is holding all the configuration files for the machines. When you
 
 # Layout
 
-Here is the typical directory layout for using **bento**:
+Here is the typical directory layout for using **bento** for three hosts `router`, `nas` and `t470`:
 
 ```
 ├── fleet.nix
@@ -60,7 +60,7 @@ Here is the typical directory layout for using **bento**:
 
 # Workflow
 
-1. make changes in some host
+1. make configuraiton changes in some host in `hosts/` or a global include file in `utils` (you can rename it as you wish)
 2. OPTIONAL: run `./local_build.sh` to check the configurations are valid, use `./local_build.sh build` to build systems locally to serve them as a substituter (requires configuration on each client)
 3. run `./populate_chroot.sh`
 4. hosts will pickup changes and run a rebuild
