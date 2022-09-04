@@ -84,10 +84,11 @@ then
         nixos-rebuild switch --flake .#bento-machine
     fi
 else
-    nixos-rebuild build --no-flake -I nixos-config=./configuration.nix --upgrade
+    export NIX_PATH=/root/.nix-defexpr/channels:nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos:nixos-config=/var/bento/configuration.nix:/nix/var/nix/profiles/per-user/root/channels
+    nixos-rebuild build --no-flake --upgrade
     if [ ! "\${RESULT}" = "\$(readlink -f result)" ]
     then
-        nixos-rebuild switch --no-flake -I nixos-config=./configuration.nix --upgrade
+        nixos-rebuild switch --no-flake --upgrade
     fi
 fi
 EOF
