@@ -32,6 +32,7 @@ then
   NAME=*
 fi
 
+SUCCESS=0
 for i in $NAME
 do
   if test -d "$i"
@@ -49,14 +50,21 @@ do
         test -d .git || git init >/dev/null 2>/dev/null
         git add . >/dev/null
         $SUDO nixos-rebuild "${COMMAND}" --flake .#bento-machine 2>${TMPLOG} >${TMPLOG}
-        if [ $? -eq 0 ]; then echo "success"  ; else echo "failure" ; cat ${TMPLOG} ; fi
+        if [ $? -eq 0 ]; then echo "success"  ; else echo "failure" ; SUCCESS=$(( SUCCESS + 1 )) ; cat ${TMPLOG} ; fi
 
     else
         cd "$TMP" || exit 5
         $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>${TMPLOG} >${TMPLOG}
-        if [ $? -eq 0 ]; then echo "success"  ; else echo "failure" ; cat ${TMPLOG} ; fi
+        if [ $? -eq 0 ]; then echo "success"  ; else echo "failure" ; SUCCESS=$(( SUCCESS + 1 )) ; cat ${TMPLOG} ; fi
     fi
     cd - >/dev/null || exit 5
     rm -fr "$TMP"
   fi
 done
+
+# we don't want to allow this script to chain
+# with another if it failed
+if [ "$SUCCESS" -ne 0 ]
+then
+    exit 1
+fi
