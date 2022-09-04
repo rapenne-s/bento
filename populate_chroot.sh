@@ -58,6 +58,9 @@ EOF
 #!/bin/sh
 set -e
 
+# accept the remote ssh fingerprint if not already known
+ssh-keygen -F "${REMOTE_IP}" || ssh-keyscan "${REMOTE_IP}" >> .ssh/known_hosts
+
 install -d -o root -g root -m 700 /var/bento
 cd /var/bento
 
