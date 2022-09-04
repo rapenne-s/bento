@@ -1,0 +1,2 @@
+CHROOT_DIR=/home/chroot
+REMOTE_IP=myserver.example
