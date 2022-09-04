@@ -17,6 +17,7 @@ There is currently no tool to manage a bunch of NixOS systems that could be work
 - smart 💡: secrets (arbitrary files) can (soon) be deployed without storing them in the nix store
 - robustness in mind 🦾: clients just need to connect to a remote ssh, there are many ways to bypass firewalls (corkscrew, VPN, Tor hidden service, I2P, ...)
 - extensible 🧰 🪡: you can change every component, if you prefer using GitHub repositories to fetch configuration files instead of a remote sftp server, you can change it
+- for all NixOS 💻🏭📱: it can be used for remote workstations, smartphones running NixoS, servers in a datacenter
 
 # Prerequisites
 
