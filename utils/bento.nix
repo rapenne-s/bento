@@ -14,7 +14,7 @@ in
 
   systemd.services.bento-upgrade = {
     enable = true;
-    path = with pkgs; [ openssh git nixos-rebuild ];
+    path = with pkgs; [ openssh git nixos-rebuild nix ];
     serviceConfig.Type = "oneshot";
     script = ''
       cd /var/bento
