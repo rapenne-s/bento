@@ -2,6 +2,8 @@
 
 A KISS deployment tool to keep your NixOS fleet (servers & workstations) up to date.
 
+This name was chosen because Bento are good, and comes with the idea of "ready to use".  And it doesn't use "nix" in its name.
+
 # Why?
 
 There is currently no tool to manage a bunch of NixOS systems that could be workstations anywhere in the world, or servers in a datacenter, using flakes or not.
