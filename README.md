@@ -8,6 +8,16 @@ This name was chosen because Bento are good, and comes with the idea of "ready t
 
 There is currently no tool to manage a bunch of NixOS systems that could be workstations anywhere in the world, or servers in a datacenter, using flakes or not.
 
+# Features
+
+- secure 🛡️: each client can only access its own configuration files (ssh authentication + sftp chroot)
+- efficient 🏂🏾: configurations can be built on the central management server to serve binary packages if it is used as a substituters by the clients
+- organized 💼: system administrators have all configurations files in one repository to easy management
+- peace of mind 🧘🏿: configurations validity can be verified locally by system administrators
+- smart 💡: secrets (arbitrary files) can (soon) be deployed without storing them in the nix store
+- robustness in mind 🦾: clients just need to connect to a remote ssh, there are many ways to bypass firewalls (corkscrew, VPN, Tor hidden service, I2P, ...)
+- extensible 🧰 🪡: you can change every component, if you prefer using GitHub repositories to fetch configuration files instead of a remote sftp server, you can change it
+
 # Prerequisites
 
 This setup need a machine to be online most of the time.  NixOS systems (clients) will regularly check for updates on this machine over ssh.
