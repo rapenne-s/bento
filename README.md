@@ -118,6 +118,7 @@ If you don't want to wait for the timer, you can ssh into the machine to run `sy
 
 ## Major priority
 
+- client should report their current version after an upgrade, we should be able to compute the same value from the config on the server side, this would allow to check if a client is correctly up to date
 - being able to create a podman compatible NixOS image that would be used as the chroot server, to avoid reconfiguring the host and use sudo to distribute files
 - auto rollback like "magicrollback" by deploy-rs in case of losing connectivity after an upgrade
 - `local_build.sh` and `populate_chroot` should be only one command installed in `$PATH`
