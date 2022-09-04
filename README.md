@@ -74,7 +74,7 @@ Here is the typical directory layout for using **bento** for three hosts `router
 
 Here are the steps to add a server named `kikimora` to bento:
 
-[Asciinema screencast of this example](https://asciinema.org/a/518834)
+[![asciicast](https://asciinema.org/a/518834.svg)](https://asciinema.org/a/518834)
 
 1. generate a ssh-key on `kikimora` for root user
 2. add kikimora's public key to bento `fleet.nix` file
