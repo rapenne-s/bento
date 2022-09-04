@@ -68,6 +68,24 @@ Here is the typical directory layout for using **bento** for three hosts `router
 4. run `./populate_chroot.sh`
 5. hosts will pickup changes and run a rebuild
 
+# Examples
+
+## Adding a new host
+
+Here are the steps to add a server named `kikimora` to bento:
+
+[Asciinema screencast of this example](https://asciinema.org/a/518834)
+
+1. generate a ssh-key on `kikimora` for root user
+2. add kikimora's public key to bento `fleet.nix` file
+3. reconfigure the ssh host to allow kikimora's key (it should include the `fleet.nix` file)
+4. copy kikimora's config (usually `/etc/nixos/` in bento `hosts/kikimora/` directory
+5. add utils/bento.nix to its config (in `hosts/kikimora` run `ln -s ../../utils .` and add `./utils/bento.nix` in `imports` list)
+6. check kikimora's config locally with `./local_build.sh`, you can check only kikimora with `env NAME=kikimora ./local_build.sh`
+7. populate the chroot with `sudo ./populate_chroot.sh` to copy the files in `/home/chroot/kikimora/`
+8. run bootstrap script on kikimora to switch to the new configuration from sftp and enable the timer to poll for upgrades
+9. you can get bento's log with `journalctl -u bento-upgrade.service` and see next timer information with `systemctl status bento-upgrade.timer`
+
 # TODO
 
 - auto rollback like "magicrollback" by deploy-rs
