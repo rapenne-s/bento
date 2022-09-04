@@ -29,8 +29,19 @@ do
     if [ -d "$i" ]
     then
 
+      # sftp chroot requires the home directory to be owned by root
+      install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}"
+      install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}"
+      install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}/config"
+      install -d -o ${i} -g sftp_users -m 755 "${CHROOT_DIR}/${i}/logs"
+
+      # copy files in the chroot
+      rsync --delete -rltgoDvL "$i/" "${CHROOT_DIR}/${i}/config/"
+
+      touch "${CHROOT_DIR}/${i}/last_change_date"
+
       # create the script that will check for updates
-      cat > "$i/update.sh" <<EOF
+      cat > "${CHROOT_DIR}/${i}/config/update.sh" <<EOF
 #!/bin/sh
 set -e
 
@@ -46,7 +57,7 @@ then
     echo "no update required"
 else
     echo "update required"
-    sftp ${i}@${REMOTE_IP}:/bootstrap.sh .
+    sftp ${i}@${REMOTE_IP}:/config/bootstrap.sh .
     /bin/sh bootstrap.sh
     echo "\$STATE" > /var/bento/.state
 fi
@@ -54,7 +65,7 @@ EOF
 
       # script used to download changes and rebuild
       # also used to run it manually the first time to configure the system
-      cat > "$i/bootstrap.sh" <<EOF
+      cat > "${CHROOT_DIR}/${i}/config/bootstrap.sh" <<EOF
 #!/bin/sh
 set -e
 
@@ -64,7 +75,7 @@ ssh-keygen -F "${REMOTE_IP}" || ssh-keyscan "${REMOTE_IP}" >> /root/.ssh/known_h
 install -d -o root -g root -m 700 /var/bento
 cd /var/bento
 
-sftp -r ${i}@${REMOTE_IP}:/ .
+printf "%s\n" "cd config" "get -R ." | sftp -r ${i}@${REMOTE_IP}:
 
 # for flakes
 test -d .git || git init
@@ -76,38 +87,52 @@ then
     RESULT="\$(readlink -f result)"
 fi
 
+LOGFILE=\$(mktemp /tmp/build-log.XXXXXXXXXXXXXXXXXXXX)
+
+SUCCESS=2
 if test -f flake.nix
 then
     nixos-rebuild build --flake .#bento-machine
     if [ ! "\${RESULT}" = "\$(readlink -f result)" ]
     then
-        nixos-rebuild switch --flake .#bento-machine
+        nixos-rebuild switch --flake .#bento-machine 2>&1 | tee \$LOGFILE
+        SUCCESS=\$?
+    else
+        SUCCESS=nothing
     fi
 else
     export NIX_PATH=/root/.nix-defexpr/channels:nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos:nixos-config=/var/bento/configuration.nix:/nix/var/nix/profiles/per-user/root/channels
-    nixos-rebuild build --no-flake --upgrade
+    nixos-rebuild build --no-flake --upgrade 2>&1 | tee \$LOGFILE
     if [ ! "\${RESULT}" = "\$(readlink -f result)" ]
     then
-        nixos-rebuild switch --no-flake --upgrade
+        nixos-rebuild switch --no-flake --upgrade 2>&1 | tee -a \$LOGFILE
+        SUCCESS=\$?
+    else
+        SUCCESS=nothing
     fi
+fi
+
+gzip -9 \$LOGFILE
+#mv \$LOGFILE \$LOGFILE.gz
+if [ ! "\$SUCCESS" = "nothing" ]
+then
+  if [ "\$SUCCESS" -eq 0 ]
+  then
+      echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)-success.log.gz" | sftp ${i}@${REMOTE_IP}:
+  else
+      echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)-failure.log.gz" | sftp ${i}@${REMOTE_IP}:
+  fi
 fi
 EOF
 
       # to make flakes using caching, we must avoid repositories to change everytime
       # we must ignore files that change everytime
-      cat > "$i/.gitignore" <<EOF
+      cat > "${CHROOT_DIR}/${i}/config/.gitignore" <<EOF
 bootstrap.sh
 update.sh
 .state
 result
 last_change_date
 EOF
-
-      # copy files in the chroot
-      rsync --delete -avL "$i/" "${CHROOT_DIR}/${i}/"
-
-      # sftp chroot requires the home directory to be owned by root
-      install -d -o root -g root -m 755 "${CHROOT_DIR}/${i}"
-      touch "${CHROOT_DIR}/${i}/last_change_date"
     fi
 done
