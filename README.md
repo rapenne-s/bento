@@ -127,7 +127,7 @@ If you don't want to wait for the timer, you can ssh into the machine to run `sy
 ## Minor
 
 - a systray info widget could tell the user an upgrade has been done
-- updates should add a log file in the sftp chroot if successful or not
+- DONE ~~updates should add a log file in the sftp chroot if successful or not~~
 - the sftp server could be on another server than the one with the configuration files
 - provide more useful modules in the utility nix file (automatically use the host as a binary cache for instance)
 - have a local information how to ssh to the client to ease the rebuild trigger (like a SSH file containing ssh command line)
