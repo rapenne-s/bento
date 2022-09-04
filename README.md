@@ -72,3 +72,5 @@ Here is the typical directory layout for using **bento** for three hosts `router
 
 - auto rollback like "magicrollback" by deploy-rs
 - updates should add a log file in the sftp chroot if successful or not
+- the sftp server could be on another server than the one with the configuration files
+- `local_build.sh` and `populate_chroot` should be only one command installed in `$PATH`
