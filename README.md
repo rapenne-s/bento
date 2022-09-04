@@ -86,6 +86,16 @@ Here are the steps to add a server named `kikimora` to bento:
 8. run bootstrap script on kikimora to switch to the new configuration from sftp and enable the timer to poll for upgrades
 9. you can get bento's log with `journalctl -u bento-upgrade.service` and see next timer information with `systemctl status bento-upgrade.timer`
 
+## Deploying changes
+
+Here are the steps to deploy a change in a host managed with **bento**
+
+1. edit its configuration file to make the changes in `hosts/the_host_name/something.nix`
+2. run `sudo ./populate_chroot.sh`
+3. wait for the timer of that system to trigger the update
+
+If you don't want to wait, you can ssh into that machine and run `systemctl start bento-upgrade.service`
+
 # TODO
 
 - auto rollback like "magicrollback" by deploy-rs
