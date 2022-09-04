@@ -8,15 +8,15 @@ There is currently no tool to manage a bunch of NixOS systems that could be work
 
 # Prerequisites
 
-This setup need a machine that need to be online most of the time.  NixOS systems (clients) will regularly check for updates on this machine over ssh.
+This setup need a machine to be online most of the time.  NixOS systems (clients) will regularly check for updates on this machine over ssh.
 
-If you don't have a public IP, don't worry, you can use tor hidden service, i2p tunnels, a VPN or whatever floats your boat given it permit to connect to ssh.
+If you don't absolutely require a public IP, don't worry, you can use tor hidden service, i2p tunnels, a VPN or whatever floats your boat given it permit to connect to ssh.
 
 # How it works
 
-The ssh server is holding all the configuration files for the machines. When you make a change, you need to copy all the files to a new directory in a sftp chroot used by each client, each client regularly poll for changes in their dedicated sftp directory and if it changed, they download all the configuration files and run nixos-rebuild. It automatically detects if the configuration is using flakes or not.
+The ssh server is containing all the configuration files for the machines. When you make a change, you run a script copying all the configuration files to a new directory used by each client as a sftp chroot, each client regularly poll for changes in their dedicated sftp directory and if it changed, they download all the configuration files and run nixos-rebuild. It automatically detects if the configuration is using flakes or not.
 
-**Bentoo** is just a framework and a few scripts to make this happening:
+**Bento** is just a framework and a few scripts to make this happening, ideally this should be a command in `$PATH` instead of scripts in your configuration directory:
 
 - `populate_chroot.sh` create copies of configuration files for each host found in `host` into the corresponding chroot directory (default is `/home/chroot/$machine/`
 - `fleet.nix` file that must be included in the ssh host server configuration, it declares the hosts with their name and ssh key, creates the chroots and enable sftp for each of them. You basically need to update this file when a key change, or a host is added/removed
@@ -62,7 +62,7 @@ Here is the typical directory layout for using **bento** for three hosts `router
 
 # Workflow
 
-1. make configuraiton changes in some host in `hosts/` or a global include file in `utils` (you can rename it as you wish)
+1. make configuration changes per host in `hosts/` or a global include file in `utils` (you can rename it as you wish)
 2. OPTIONAL: run `./local_build.sh` to check the configurations are valid
 3. OPTIONAL: run `./local_build.sh build` to build systems locally and make them available in the store. This is useful if you want to serve the result as a substituter (requires configuration on each client)
 4. run `./populate_chroot.sh`
@@ -91,10 +91,11 @@ Here are the steps to add a server named `kikimora` to bento:
 Here are the steps to deploy a change in a host managed with **bento**
 
 1. edit its configuration file to make the changes in `hosts/the_host_name/something.nix`
-2. run `sudo ./populate_chroot.sh`
-3. wait for the timer of that system to trigger the update
+2. OPTIONAL: run `./local_build.sh` to check if the configurations are valid
+3. run `sudo ./populate_chroot.sh`
+4. wait for the timer of that system to trigger the update
 
-If you don't want to wait, you can ssh into that machine and run `systemctl start bento-upgrade.service`
+If you don't want to wait for the timer, you can ssh into the machine to run `systemctl start bento-upgrade.service`
 
 # TODO
 
