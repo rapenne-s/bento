@@ -25,6 +25,10 @@ The ssh server is containing all the configuration files for the machines. When 
 
 On the client, the system configuration is stored in `/var/bento/` and also contains scripts `update.sh` and `bootstrap.sh` used to look for changes and trigger a rebuild.
 
+There is a diagram showing the design pattern of **bento**:
+
+![diagram](https://dataswamp.org/~solene/static/nixos-fleet-pattern.png)
+
 # Layout
 
 Here is the typical directory layout for using **bento** for three hosts `router`, `nas` and `t470`:
