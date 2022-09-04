@@ -34,22 +34,29 @@ fi
 
 for i in $NAME
 do
-  TMP="$(mktemp -d /tmp/bento-build.XXXXXXXXXXXX)"
-  rsync -aL "$i/" "$TMP/"
-  if test -f "$i/flake.nix"
+  if test -d "$i"
   then
+    TMP="$(mktemp -d /tmp/bento-build.XXXXXXXXXXXX)"
+    TMPLOG="$(mktemp /tmp/bento-build-log.XXXXXXXXXXXX)"
+    rsync -aL "$i/" "$TMP/"
 
-      # add files to a git repo
-      cd "$TMP"
-      test -d .git || git init >/dev/null 2>/dev/null
-      git add . >/dev/null
-      $SUDO nixos-rebuild "${COMMAND}" --flake .#bento-machine 2>log >log
-      if [ $? -eq 0 ]; then echo "$COMMAND ${i}: success"  ; else echo "$COMMAND ${i}: failure" ; cat log ; fi
-      cd - >/dev/null
+    printf "${COMMAND} ${i}: "
 
-  else
-      $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>log >log
-      if [ $? -eq 0 ]; then echo "$COMMAND ${i}: success"  ; else echo "$COMMAND ${i}: failure" ; cat log ; fi
+    if test -f "$i/flake.nix"
+    then
+        cd "$TMP" || exit 5
+        # add files to a git repo
+        test -d .git || git init >/dev/null 2>/dev/null
+        git add . >/dev/null
+        $SUDO nixos-rebuild "${COMMAND}" --flake .#bento-machine 2>${TMPLOG} >${TMPLOG}
+        if [ $? -eq 0 ]; then echo "success"  ; else echo "failure" ; cat ${TMPLOG} ; fi
+
+    else
+        cd "$TMP" || exit 5
+        $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>${TMPLOG} >${TMPLOG}
+        if [ $? -eq 0 ]; then echo "success"  ; else echo "failure" ; cat ${TMPLOG} ; fi
+    fi
+    cd - >/dev/null || exit 5
+    rm -fr "$TMP"
   fi
-  rm -fr "$TMP"
 done
