@@ -23,25 +23,25 @@ fi
 
 for i in $NAME
 do
-    echo "Copying $i"
+    printf "Copying $i: "
 
     # we only want directories
     if [ -d "$i" ]
     then
 
-      # sftp chroot requires the home directory to be owned by root
-      install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}"
-      install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}"
-      install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}/config"
-      install -d -o ${i} -g sftp_users -m 755 "${CHROOT_DIR}/${i}/logs"
+        STAGING_DIR="$(mktemp -d /tmp/bento-staging-dispatch.XXXXXXXXXXXXXX)"
 
-      # copy files in the chroot
-      rsync --delete -rltgoDvL "$i/" "${CHROOT_DIR}/${i}/config/"
+        # sftp chroot requires the home directory to be owned by root
+        install -d -o root -g sftp_users -m 755 "${STAGING_DIR}"
+        install -d -o root -g sftp_users -m 755 "${STAGING_DIR}/${i}"
+        install -d -o root -g sftp_users -m 755 "${STAGING_DIR}/${i}/config"
+        install -d -o ${i} -g sftp_users -m 755 "${STAGING_DIR}/${i}/logs"
 
-      touch "${CHROOT_DIR}/${i}/last_change_date"
+        # copy files in the chroot
+        rsync --delete -rltgoDL "$i/" "${STAGING_DIR}/${i}/config/"
 
-      # create the script that will check for updates
-      cat > "${CHROOT_DIR}/${i}/config/update.sh" <<EOF
+        # create the script that will check for updates
+        cat > "${STAGING_DIR}/${i}/config/update.sh" <<EOF
 #!/bin/sh
 set -e
 
@@ -63,14 +63,14 @@ else
 fi
 EOF
 
-      # script used to download changes and rebuild
-      # also used to run it manually the first time to configure the system
-      cat > "${CHROOT_DIR}/${i}/config/bootstrap.sh" <<EOF
+        # script used to download changes and rebuild
+        # also used to run it manually the first time to configure the system
+        cat > "${STAGING_DIR}/${i}/config/bootstrap.sh" <<EOF
 #!/bin/sh
 set -e
 
 # accept the remote ssh fingerprint if not already known
-ssh-keygen -F "${REMOTE_IP}" || ssh-keyscan "${REMOTE_IP}" >> /root/.ssh/known_hosts
+ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan "${REMOTE_IP}" >> /root/.ssh/known_hosts
 
 install -d -o root -g root -m 700 /var/bento
 cd /var/bento
@@ -125,14 +125,35 @@ then
 fi
 EOF
 
-      # to make flakes using caching, we must avoid repositories to change everytime
-      # we must ignore files that change everytime
-      cat > "${CHROOT_DIR}/${i}/config/.gitignore" <<EOF
+        # to make flakes using caching, we must avoid repositories to change everytime
+        # we must ignore files that change everytime
+        cat > "${STAGING_DIR}/${i}/config/.gitignore" <<EOF
 bootstrap.sh
 update.sh
 .state
 result
 last_change_date
 EOF
+
+        # only distribute changes if they changed
+        # this avoids bumping the time and trigger a rebuild for nothing
+        diff -r "${STAGING_DIR}/${i}/config/" "${CHROOT_DIR}/${i}/config/" >/dev/null
+        CHANGES=$?
+
+        if [ "$CHANGES" -ne 0 ]
+        then
+            echo " update"
+            # copy files in the chroot
+            install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}"
+            install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}"
+            install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}/config"
+            install -d -o ${i} -g sftp_users -m 755 "${CHROOT_DIR}/${i}/logs"
+            rsync --delete -rltgoDvL "${STAGING_DIR}/${i}/config/" "${CHROOT_DIR}/${i}/config/"
+            touch "${CHROOT_DIR}/${i}/last_change_date"
+        else
+            echo " no changes"
+        fi
+
+        rm -fr "${STAGING_DIR}"
     fi
 done
