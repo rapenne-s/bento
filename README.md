@@ -85,6 +85,14 @@ Here is the typical directory layout for using **bento** for three hosts `router
 4. run `./populate_chroot.sh`
 5. hosts will pickup changes and run a rebuild
 
+# Track each host state
+
+As each host is sending a log upon rebuild to tell if it failed or succeeded, we can use this file to check what happened since the sftp file `last_time_changed` was created.
+
+Using `./get_status.sh` you can track the current state of each hosts.
+
+[![asciicast](https://asciinema.org/a/519060.svg)](https://asciinema.org/a/519060)
+
 # Examples
 
 ## Adding a new host
