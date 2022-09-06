@@ -27,8 +27,15 @@ else # not using switch or test
 fi
 
 cd hosts
-for i in *
+if [ -z "${NAME}" ]
+then
+    NAME=*
+    PRETTY_OUT_COLUMN=$(ls -1 | awk '{ if(length($1) > max) { max = length($1) }} END { print max }')
+fi
+
+for i in $NAME
 do
+    printf "%${PRETTY_OUT_COLUMN}s " "${i}"
     test -d "$i" || continue
     build_config "$i" "$COMMAND" "$SUDO" "$i"
 done
