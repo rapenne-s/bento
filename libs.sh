@@ -60,7 +60,10 @@ EOF
 ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan "${REMOTE_IP}" >> /root/.ssh/known_hosts
 
 install -d -o root -g root -m 700 /var/bento
-cd /var/bento
+cd /var/bento || exit 5
+
+find . -maxdepth 1 -type d -exec rm -fr {} \;
+find . -maxdepth 1 -type f -not -name .state -and -not -name update.sh -and -not -name bootstrap.sh -exec rm {} \;
 
 printf "%s\n" "cd config" "get -R ." | sftp -r ${i}@${REMOTE_IP}:
 
