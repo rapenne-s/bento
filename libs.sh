@@ -70,35 +70,57 @@ SUCCESS=2
 if test -f flake.nix
 then
     nixos-rebuild build --flake .#bento-machine
-    if [ ! "\${RESULT}" = "\$(readlink -f result)" ]
+    SUCCESS=\$?
+    if [ "$\SUCCESS" -eq 0 ]
     then
-        nixos-rebuild switch --flake .#bento-machine 2>&1 | tee \$LOGFILE
-        SUCCESS=\$?
-    else
-        SUCCESS=nothing
+        if [ ! "\${RESULT}" = "\$(readlink -f result)" ]
+        then
+            nixos-rebuild switch --flake .#bento-machine 2>&1 | tee \$LOGFILE
+            SUCCESS=\$(( SUCCESS + \$? ))
+            if [ -z "\${RESULT}" ]; then RESULT="\$(readlink -f result)" ; fi
+        else
+            # we want to report a success log
+            # no configuration changed but Bento did
+            SUCCESS=0
+        fi
     fi
 else
     export NIX_PATH=/root/.nix-defexpr/channels:nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos:nixos-config=/var/bento/configuration.nix:/nix/var/nix/profiles/per-user/root/channels
     nixos-rebuild build --no-flake --upgrade 2>&1 | tee \$LOGFILE
-    if [ ! "\${RESULT}" = "\$(readlink -f result)" ]
+    SUCCESS=\$?
+    if [ "$\SUCCESS" -eq 0 ]
     then
-        nixos-rebuild switch --no-flake --upgrade 2>&1 | tee -a \$LOGFILE
-        SUCCESS=\$?
-    else
-        SUCCESS=nothing
+        if [ ! "\${RESULT}" = "\$(readlink -f result)" ]
+        then
+            nixos-rebuild switch --no-flake --upgrade 2>&1 | tee -a \$LOGFILE
+            SUCCESS=\$(( SUCCESS + \$? ))
+            if [ -z "\${RESULT}" ]; then RESULT="\$(readlink -f result)" ; fi
+        else
+            # we want to report a success log
+            # no configuration changed but Bento did
+            SUCCESS=0
+        fi
+    fi
+fi
+
+# nixos-rebuild doesn't report an error in case of lack of disk space on /boot
+# see #189966
+if [ "\$SUCCESS" -eq 0 ]
+then
+    if grep "No space left" "\$LOGFILE"
+    then
+        SUCCESS=1
+        # we don't want to skip a rebuild next time
+        rm result
     fi
 fi
 
 gzip -9 \$LOGFILE
-#mv \$LOGFILE \$LOGFILE.gz
-if [ ! "\$SUCCESS" = "nothing" ]
+if [ "\$SUCCESS" -eq 0 ]
 then
-  if [ "\$SUCCESS" -eq 0 ]
-  then
-      echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)-\${RESULT#/nix/store/}-success.log.gz" | sftp ${i}@${REMOTE_IP}:
-  else
-      echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)-\${RESULT#/nix/store/}-failure.log.gz" | sftp ${i}@${REMOTE_IP}:
-  fi
+    echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)-\${RESULT#/nix/store/}-success.log.gz" | sftp ${i}@${REMOTE_IP}:
+else
+    echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)-\${RESULT#/nix/store/}-failure.log.gz" | sftp ${i}@${REMOTE_IP}:
 fi
 EOF
 
