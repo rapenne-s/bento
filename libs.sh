@@ -1,3 +1,59 @@
+build_config()
+{
+    SOURCES=$1
+    COMMAND="$2"
+    SUDO="$3"
+    NAME="$4"
+
+    SUCCESS=0
+    TMP="$(mktemp -d /tmp/bento-build.XXXXXXXXXXXX)"
+    TMPLOG="$(mktemp /tmp/bento-build-log.XXXXXXXXXXXX)"
+    rsync -aL "$SOURCES/" "$TMP/"
+
+    SECONDS=0
+    if test -f "$SOURCES/flake.nix"
+    then
+        cd "$TMP" || exit 5
+
+        # add files to a git repo
+        test -d .git || git init >/dev/null 2>/dev/null
+        git add . >/dev/null
+
+        $SUDO nixos-rebuild "${COMMAND}" --flake .#bento-machine 2>${TMPLOG} >${TMPLOG}
+        if [ $? -eq 0 ]; then printf "success " ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat ${TMPLOG} ; fi
+        ELAPSED=$(elapsed_time $SECONDS)
+        printf "($ELAPSED)"
+        if [ "${COMMAND}" = "build" ]
+        then
+            touch ${OLDPWD}/../states.txt
+            VERSION="$(readlink -f result | tr -d '\n' | sed 's,/nix/store/,,')"
+            printf " %s" "${VERSION}"
+            sed -i "/^${NAME}/d" $OLDPWD/../states.txt >/dev/null
+            echo "${NAME}=${VERSION}" >> $OLDPWD/../states.txt
+        fi
+        echo ""
+    else
+        cd "${TMP}" || exit 5
+        $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>${TMPLOG} >${TMPLOG}
+        if [ $? -eq 0 ]; then printf "success "  ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat ${TMPLOG} ; fi
+        ELAPSED=$(elapsed_time $SECONDS)
+        printf "($ELAPSED)"
+        if [ "${COMMAND}" = "build" ]
+        then
+            touch "${OLDPWD}/../states.txt"
+            VERSION="$(readlink -f result | tr -d '\n' | sed 's,/nix/store/,,')"
+            printf " %s" "${VERSION}"
+            sed -i '/^"${NAME}"/d' "${OLDPWD}/../states.txt" >/dev/null
+            echo "${NAME}=${VERSION}" >> "${OLDPWD}/../states.txt"
+        fi
+        echo ""
+    fi
+    cd - >/dev/null || exit 5
+    rm -fr "$TMP"
+
+    return "${SUCCESS}"
+}
+
 deploy_files() {
     i="$1"
     printf "Copying $i: "
@@ -168,7 +224,8 @@ EOF
 
         if [ "$CHANGES" -ne 0 ]
         then
-            echo " update"
+            build_config "${STAGING_DIR}/${i}/config/" "build" "" "${i}"
+            echo " update required"
             # copy files in the chroot
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}"
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}"
@@ -206,64 +263,5 @@ elapsed_time() {
     if [ -z "$DURATION" ]; then DURATION="0s" ; fi
 
     echo "$DURATION"
-}
-
-build_config()
-{
-    NAME="$1"
-    COMMAND="$2"
-    SUDO="$3"
-
-    BAD_HOSTS=""
-    cd hosts
-
-    # load all hosts or the one defined in environment variable NAME
-    if [ -z "$NAME" ]
-    then
-        NAME=*
-    fi
-
-    SUCCESS=0
-    for i in $NAME
-    do
-        if test -d "$i"
-        then
-            TMP="$(mktemp -d /tmp/bento-build.XXXXXXXXXXXX)"
-            TMPLOG="$(mktemp /tmp/bento-build-log.XXXXXXXXXXXX)"
-            rsync -aL "$i/" "$TMP/"
-
-            printf "${COMMAND} ${i}: "
-
-            SECONDS=0
-            if test -f "$i/flake.nix"
-            then
-                cd "$TMP" || exit 5
-                # add files to a git repo
-                test -d .git || git init >/dev/null 2>/dev/null
-                git add . >/dev/null
-                $SUDO nixos-rebuild "${COMMAND}" --flake .#bento-machine 2>${TMPLOG} >${TMPLOG}
-                if [ $? -eq 0 ]; then printf "success "  ; else printf "failure " ; BAD_HOSTS="${i} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat ${TMPLOG} ; fi
-                ELAPSED=$(elapsed_time $SECONDS)
-                echo "($ELAPSED)"
-            else
-                cd "$TMP" || exit 5
-                $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>${TMPLOG} >${TMPLOG}
-                if [ $? -eq 0 ]; then printf "success "  ; else printf "failure " ; BAD_HOSTS="${i} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat ${TMPLOG} ; fi
-                ELAPSED=$(elapsed_time $SECONDS)
-                echo "($ELAPSED)"
-            fi
-            cd - >/dev/null || exit 5
-            rm -fr "$TMP"
-        fi
-    done
-
-    # we don't want to allow this script to chain
-    # with another if it failed
-    if [ "$SUCCESS" -ne 0 ]
-    then
-        echo ""
-        echo "Hosts with errors: ${BAD_HOSTS}"
-        exit 1
-    fi
 }
 

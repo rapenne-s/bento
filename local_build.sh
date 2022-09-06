@@ -26,4 +26,9 @@ else # not using switch or test
     SUDO=""
 fi
 
-build_config "$NAME" "$COMMAND" "$SUDO"
+cd hosts
+for i in *
+do
+    test -d "$i" || continue
+    build_config "$i" "$COMMAND" "$SUDO" "$i"
+done
