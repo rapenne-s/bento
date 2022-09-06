@@ -149,7 +149,7 @@ EOF
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}"
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}/config"
             install -d -o ${i} -g sftp_users -m 755 "${CHROOT_DIR}/${i}/logs"
-            rsync --delete -rltgoDvL "${STAGING_DIR}/${i}/config/" "${CHROOT_DIR}/${i}/config/"
+            rsync --delete -rltgoDL "${STAGING_DIR}/${i}/config/" "${CHROOT_DIR}/${i}/config/"
             touch "${CHROOT_DIR}/${i}/last_change_date"
         else
             echo " no changes"
@@ -188,6 +188,8 @@ build_config()
     NAME="$1"
     COMMAND="$2"
     SUDO="$3"
+
+    BAD_HOSTS=""
     cd hosts
 
     # load all hosts or the one defined in environment variable NAME
@@ -215,25 +217,27 @@ build_config()
                 test -d .git || git init >/dev/null 2>/dev/null
                 git add . >/dev/null
                 $SUDO nixos-rebuild "${COMMAND}" --flake .#bento-machine 2>${TMPLOG} >${TMPLOG}
-                if [ $? -eq 0 ]; then printf "success "  ; else printf "failure " ; SUCCESS=$(( SUCCESS + 1 )) ; cat ${TMPLOG} ; fi
+                if [ $? -eq 0 ]; then printf "success "  ; else printf "failure " ; BAD_HOSTS="${i} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat ${TMPLOG} ; fi
                 ELAPSED=$(elapsed_time $SECONDS)
                 echo "($ELAPSED)"
             else
                 cd "$TMP" || exit 5
                 $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>${TMPLOG} >${TMPLOG}
-                if [ $? -eq 0 ]; then printf "success "  ; else printf "failure " ; SUCCESS=$(( SUCCESS + 1 )) ; cat ${TMPLOG} ; fi
+                if [ $? -eq 0 ]; then printf "success "  ; else printf "failure " ; BAD_HOSTS="${i} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat ${TMPLOG} ; fi
                 ELAPSED=$(elapsed_time $SECONDS)
                 echo "($ELAPSED)"
             fi
-        cd - >/dev/null || exit 5
-        rm -fr "$TMP"
-      fi
+            cd - >/dev/null || exit 5
+            rm -fr "$TMP"
+        fi
     done
 
     # we don't want to allow this script to chain
     # with another if it failed
     if [ "$SUCCESS" -ne 0 ]
     then
+        echo ""
+        echo "Hosts with errors: ${BAD_HOSTS}"
         exit 1
     fi
 }
