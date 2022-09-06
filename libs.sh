@@ -122,6 +122,8 @@ then
 else
     echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)-\${RESULT#/nix/store/}-failure.log.gz" | sftp ${i}@${REMOTE_IP}:
 fi
+
+rm "\${LOGFILE}.gz"
 EOF
 
         # to make flakes using caching, we must avoid repositories to change everytime
