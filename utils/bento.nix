@@ -24,4 +24,20 @@ in {
       /bin/sh update.sh
     '';
   };
+
+  systemd.sockets.listen-update = {
+    enable = true;
+    wantedBy = ["sockets.target"];
+    requires = ["network.target"];
+    listenStreams = ["51337"];
+    socketConfig.Accept = "yes";
+  };
+
+  systemd.services."listen-update@" = {
+    path = with pkgs; [systemd];
+    enable = true;
+    serviceConfig.StandardInput = "socket";
+    serviceConfig.ExecStart = "${pkgs.systemd.out}/bin/systemctl start bento-upgrade.service";
+    serviceConfig.ExecStartPost = "${pkgs.systemd.out}/bin/journalctl -f --no-pager -u bento-upgrade.service";
+  };
 }
