@@ -16,13 +16,13 @@ do
     LASTLOG=$(find "${i}/logs/" -type f | sort -n | tail -n 1)
     LASTTIME=$(date -r "$LASTLOG" "+%s")
     LASTCONFIG=$(date -r "${i}/last_change_date" "+%s")
-    ELAPSED_SINCE_UPDATE="last_update $(elapsed_time $(( $(date +%s) - $LASTTIME ))) ago"
+    ELAPSED_SINCE_UPDATE="last_rebuild $(elapsed_time $(( $(date +%s) - $LASTTIME ))) ago"
     ELAPSED_SINCE_LATE="since config change $(elapsed_time $(( $(date +%s) - $LASTCONFIG))) ago"
-
 
     if [ "$(echo "$RESULT" | awk 'END { print NR }')" -gt 1 ]
     then
-        echo " problem, multiple logs files found 🔥🧯🧯 ($ELAPSED_SINCE_UPDATE) ($ELAPSED_SINCE_LATE)"
+        echo " multiple logs files found 🔥🧯🧯 ($ELAPSED_SINCE_UPDATE) ($ELAPSED_SINCE_LATE)"
+        continue
     fi
 
     if [ -z "$RESULT" ]
@@ -32,12 +32,12 @@ do
 
     if echo "$RESULT" | grep success >/dev/null
     then
-        echo " up to date 💚 ($ELAPSED_SINCE_UPDATE)"
+        echo "     up to date 💚 ($ELAPSED_SINCE_UPDATE)"
     fi
 
     if echo "$RESULT" | grep failure >/dev/null
     then
-        echo " failing 🔥🔥🧯 ($ELAPSED_SINCE_UPDATE) ($ELAPSED_SINCE_LATE)"
+        echo "        failing 🔥 ($ELAPSED_SINCE_UPDATE) ($ELAPSED_SINCE_LATE)"
     fi
 
 done
