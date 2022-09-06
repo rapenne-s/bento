@@ -20,13 +20,23 @@ deploy_files() {
         # create the script that will check for updates
         cat > "${STAGING_DIR}/${i}/config/update.sh" <<EOF
 #!/bin/sh
-set -e
 
 install -d -o root -g root -m 700 /var/bento
-cd /var/bento
+cd /var/bento || exit 5
 touch .state
 
-STATE="\$(echo "ls -l last_change_date" | sftp ${i}@${REMOTE_IP})"
+STATEFILE="\$(mktemp /tmp/bento-state.XXXXXXXXXXXXXXXX)"
+echo "ls -l last_change_date" | sftp ${i}@${REMOTE_IP} >"\${STATEFILE}"
+
+if [ \$? -ne 0 ]
+then
+    echo "There is certainly a network problem with ${REMOTE_IP}"
+    echo "Aborting"
+    rm "\${STATEFILE}"
+    exit 1
+fi
+
+STATE="\$(cat "\${STATEFILE}")"
 CURRENT_STATE="\$(cat /var/bento/.state)"
 
 if [ "\$STATE" = "\$CURRENT_STATE" ]
@@ -38,6 +48,7 @@ else
     /bin/sh bootstrap.sh
     echo "\$STATE" > /var/bento/.state
 fi
+rm "\${STATEFILE}"
 EOF
 
         # script used to download changes and rebuild
