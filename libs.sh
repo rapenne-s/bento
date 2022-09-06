@@ -9,10 +9,10 @@ deploy_files() {
         STAGING_DIR="$(mktemp -d /tmp/bento-staging-dispatch.XXXXXXXXXXXXXX)"
 
         # sftp chroot requires the home directory to be owned by root
-        install -d -o root -g sftp_users -m 755 "${STAGING_DIR}"
-        install -d -o root -g sftp_users -m 755 "${STAGING_DIR}/${i}"
-        install -d -o root -g sftp_users -m 755 "${STAGING_DIR}/${i}/config"
-        install -d -o ${i} -g sftp_users -m 755 "${STAGING_DIR}/${i}/logs"
+        install -d -o root   -g sftp_users -m 755 "${STAGING_DIR}"
+        install -d -o root   -g sftp_users -m 755 "${STAGING_DIR}/${i}"
+        install -d -o root   -g sftp_users -m 755 "${STAGING_DIR}/${i}/config"
+        install -d -o "${i}" -g sftp_users -m 755 "${STAGING_DIR}/${i}/logs"
 
         # copy files in the chroot
         rsync --delete -rltgoDL "$i/" "${STAGING_DIR}/${i}/config/"
@@ -173,7 +173,7 @@ EOF
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}"
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}"
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}/config"
-            install -d -o ${i} -g sftp_users -m 755 "${CHROOT_DIR}/${i}/logs"
+            install -d -o "${i}" -g sftp_users -m 755 "${CHROOT_DIR}/${i}/logs"
             rsync --delete -rltgoDL "${STAGING_DIR}/${i}/config/" "${CHROOT_DIR}/${i}/config/"
             touch "${CHROOT_DIR}/${i}/last_change_date"
         else
