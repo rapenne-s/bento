@@ -44,7 +44,6 @@ EOF
         # also used to run it manually the first time to configure the system
         cat > "${STAGING_DIR}/${i}/config/bootstrap.sh" <<EOF
 #!/bin/sh
-set -e
 
 # accept the remote ssh fingerprint if not already known
 ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan "${REMOTE_IP}" >> /root/.ssh/known_hosts
