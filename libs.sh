@@ -11,15 +11,18 @@ build_config()
     rsync -aL "$SOURCES/" "$TMP/"
 
     SECONDS=0
+    cd "$TMP" || exit 5
+
     if test -f "$SOURCES/flake.nix"
     then
-        cd "$TMP" || exit 5
-
         # add files to a git repo
         test -d .git || git init >/dev/null 2>/dev/null
         git add . >/dev/null
 
         $SUDO nixos-rebuild "${COMMAND}" --flake .#bento-machine 2>"${TMPLOG}" >"${TMPLOG}"
+    else
+        $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>"${TMPLOG}" >"${TMPLOG}"
+    fi
         if [ $? -eq 0 ]; then printf "success " ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat "${TMPLOG}" ; fi
         ELAPSED=$(elapsed_time $SECONDS)
         printf "($ELAPSED)"
@@ -30,21 +33,6 @@ build_config()
             printf " %s" "${VERSION}"
             sed -i "/^${NAME}/d" "$OLDPWD/../states.txt >/dev/null"
             echo "${NAME}=${VERSION}" >> "$OLDPWD/../states.txt"
-        fi
-        echo ""
-    else
-        cd "${TMP}" || exit 5
-        $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>"${TMPLOG}" >"${TMPLOG}"
-        if [ $? -eq 0 ]; then printf "success "  ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat "${TMPLOG}" ; fi
-        ELAPSED=$(elapsed_time $SECONDS)
-        printf "($ELAPSED)"
-        if [ "${COMMAND}" = "build" ]
-        then
-            touch "${OLDPWD}/../states.txt"
-            VERSION="$(readlink -f result | tr -d '\n' | sed 's,/nix/store/,,')"
-            printf " %s" "${VERSION}"
-            sed -i '/^"${NAME}"/d' "${OLDPWD}/../states.txt" >/dev/null
-            echo "${NAME}=${VERSION}" >> "${OLDPWD}/../states.txt"
         fi
         echo ""
     fi
