@@ -27,4 +27,8 @@ fi
 for i in $NAME
 do
     deploy_files "$i"
+    if [ -f ../states.txt ]
+    then
+        cp ../states.txt "${CHROOT_DIR}/states.txt"
+    fi
 done
