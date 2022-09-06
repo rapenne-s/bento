@@ -162,14 +162,14 @@ EOF
 elapsed_time() {
     RAW="$1"
 
-    DAYS=$(( $RAW / (24 * 60 * 60) ))
-    RAW=$(( $RAW % (24 * 60 * 60) ))
+    DAYS=$(( RAW / (24 * 60 * 60) ))
+    RAW=$(( RAW % (24 * 60 * 60) ))
 
-    HOURS=$(( $RAW / (60 * 60) ))
-    RAW=$(( $RAW % (60 * 60) ))
+    HOURS=$(( RAW / (60 * 60) ))
+    RAW=$(( RAW % (60 * 60) ))
 
-    MINUTES=$(( $RAW / 60 ))
-    RAW=$(( $RAW % 60 ))
+    MINUTES=$(( RAW / 60 ))
+    RAW=$(( RAW % 60 ))
 
     SEC=$RAW
 
