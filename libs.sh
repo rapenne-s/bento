@@ -13,7 +13,7 @@ build_config()
     SECONDS=0
     cd "$TMP" || exit 5
 
-    if test -f "$SOURCES/flake.nix"
+    if test -f "flake.nix"
     then
         # add files to a git repo
         test -d .git || git init >/dev/null 2>/dev/null
@@ -23,19 +23,19 @@ build_config()
     else
         $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>"${TMPLOG}" >"${TMPLOG}"
     fi
-        if [ $? -eq 0 ]; then printf "success " ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat "${TMPLOG}" ; fi
-        ELAPSED=$(elapsed_time $SECONDS)
-        printf "($ELAPSED)"
-        if [ "${COMMAND}" = "build" ]
-        then
-            touch "${OLDPWD}/../states.txt"
-            VERSION="$(readlink -f result | tr -d '\n' | sed 's,/nix/store/,,')"
-            printf " %s" "${VERSION}"
-            sed -i "/^${NAME}/d" "$OLDPWD/../states.txt >/dev/null"
-            echo "${NAME}=${VERSION}" >> "$OLDPWD/../states.txt"
-        fi
-        echo ""
+    if [ $? -eq 0 ]; then printf "success " ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat "${TMPLOG}" ; fi
+    ELAPSED=$(elapsed_time $SECONDS)
+    printf "($ELAPSED)"
+    if [ "${COMMAND}" = "build" ]
+    then
+        touch "${OLDPWD}/../states.txt"
+        VERSION="$(readlink -f result | tr -d '\n' | sed 's,/nix/store/,,')"
+        printf " %s" "${VERSION}"
+        sed -i "/^${NAME}/d" "$OLDPWD/../states.txt" >/dev/null
+        echo "${NAME}=${VERSION}" >> "$OLDPWD/../states.txt"
     fi
+    echo ""
+
     cd - >/dev/null || exit 5
     rm -fr "$TMP"
 
@@ -124,52 +124,36 @@ SUCCESS=2
 if test -f flake.nix
 then
     nixos-rebuild build --flake .#bento-machine
-    SUCCESS=\$?
-    if [ "\${SUCCESS}" -eq 0 ]
-    then
-        if [ ! "\${OSVERSION}" = "\$(basename \$(readlink -f result))" ]
-        then
-            nixos-rebuild switch --flake .#bento-machine 2>&1 | tee \$LOGFILE
-            SUCCESS=\$(( SUCCESS + \$? ))
-
-            # did we change the OSVERSION?
-            NEWVERSION="\$(basename \$(readlink -f /nix/var/nix/profiles/system))"
-            if [ "\${OSVERSION}" = "\${NEWVERSION}" ]
-            then
-                SUCCESS=1
-            else
-                OSVERSION="\${NEWVERSION}"
-            fi
-        else
-            # we want to report a success log
-            # no configuration changed but Bento did
-            SUCCESS=0
-        fi
-    fi
 else
     export NIX_PATH=/root/.nix-defexpr/channels:nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos:nixos-config=/var/bento/configuration.nix:/nix/var/nix/profiles/per-user/root/channels
     nixos-rebuild build --no-flake --upgrade 2>&1 | tee \$LOGFILE
-    SUCCESS=\$?
-    if [ "\${SUCCESS}" -eq 0 ]
-    then
-        if [ ! "\${OSVERSION}" = "\$(basename \$(readlink -f result))" ]
-        then
-            nixos-rebuild switch --no-flake --upgrade 2>&1 | tee -a \$LOGFILE
-            SUCCESS=\$(( SUCCESS + \$? ))
+fi
 
-            # did we change the OSVERSION?
-            NEWVERSION="\$(basename \$(readlink -f /nix/var/nix/profiles/system))"
-            if [ "\${OSVERSION}" = "\${NEWVERSION}" ]
-            then
-                SUCCESS=1
-            else
-                OSVERSION="\${NEWVERSION}"
-            fi
+SUCCESS=\$?
+if [ "\${SUCCESS}" -eq 0 ]
+then
+    if [ ! "\${OSVERSION}" = "\$(basename \$(readlink -f result))" ]
+    then
+        if test -f flake.nix
+        then
+            nixos-rebuild switch --flake .#bento-machine 2>&1 | tee \$LOGFILE
         else
-            # we want to report a success log
-            # no configuration changed but Bento did
-            SUCCESS=0
+            nixos-rebuild switch --no-flake --upgrade 2>&1 | tee -a \$LOGFILE
         fi
+        SUCCESS=\$(( SUCCESS + \$? ))
+
+        # did we change the OSVERSION?
+        NEWVERSION="\$(basename \$(readlink -f /nix/var/nix/profiles/system))"
+        if [ "\${OSVERSION}" = "\${NEWVERSION}" ]
+        then
+            SUCCESS=1
+        else
+            OSVERSION="\${NEWVERSION}"
+        fi
+    else
+        # we want to report a success log
+        # no configuration changed but Bento did
+        SUCCESS=0
     fi
 fi
 
