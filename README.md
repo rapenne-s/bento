@@ -11,6 +11,7 @@ There is currently no tool to manage a bunch of NixOS systems that could be work
 # Features
 
 - secure 🛡️: each client can only access its own configuration files (ssh authentication + sftp chroot)
+- insightful 📒: you can check the remote systems are running the same NixOS built locally with their configuration files, thanks to reproducibility
 - efficient 🏂🏾: configurations can be built on the central management server to serve binary packages if it is used as a substituters by the clients
 - organized 💼: system administrators have all configurations files in one repository to easy management
 - peace of mind 🧘🏿: configurations validity can be verified locally by system administrators
@@ -89,7 +90,7 @@ Here is the typical directory layout for using **bento** for three hosts `router
 
 As each host is sending a log upon rebuild to tell if it failed or succeeded, we can use this file to check what happened since the sftp file `last_time_changed` was created.
 
-Using `./get_status.sh` you can track the current state of each hosts.
+Using `./get_status.sh` you can track the current state of each hosts (time since last update, current NixOS version, status report)
 
 [![asciicast](https://asciinema.org/a/519060.svg)](https://asciinema.org/a/519060)
 
@@ -121,6 +122,31 @@ Here are the steps to deploy a change in a host managed with **bento**
 4. wait for the timer of that system to trigger the update
 
 If you don't want to wait for the timer, you can ssh into the machine to run `systemctl start bento-upgrade.service`
+
+## Status report of the fleet
+
+With the script `get_status.sh`, you instantly get a report of your fleet, all extracted from the logs files deposited after each update:
+
+- what is the version they should have (built locally) against the version they are currently running
+- their state:
+  - **sync pending**: no configuration file changed, only files specific to **Bento**
+  - **rebuild pending**: the local version has been updated and the remote must run `nixos-rebuild`
+  - **up to date**: everything is fine
+  - **extra logs**: the update process has been run more than necessary, this shouldn't happen. The most common case is to run the update service manually.
+  - **failing**: the update process failed
+- the time elapsed since last rebuild
+- the time elapsed since the new onfiguration has been made available
+
+Example of output:
+
+```
+   machine   local version   remote version              state                                     time
+   -------       ---------      -----------      -------------                                     ----
+  kikimora        996vw3r6      996vw3r6 💚    sync pending 🚩       (build 5m 53s) (new config 2m 48s)
+       nas        r7ips2c6      lvbajpc5 🛑 rebuild pending 🚩       (build 5m 49s) (new config 1m 45s)
+      t470        ih7vxijm      ih7vxijm 💚      up to date 💚                           (build 2m 24s)
+        x1        fcz1s2yp      fcz1s2yp 💚      up to date 💚                           (build 2m 37s)
+```
 
 # TODO
 
