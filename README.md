@@ -81,10 +81,8 @@ Here is the typical directory layout for using **bento** for three hosts `router
 # Workflow
 
 1. make configuration changes per host in `hosts/` or a global include file in `utils` (you can rename it as you wish)
-2. OPTIONAL: run `./local_build.sh` to check the configurations are valid
-3. OPTIONAL: run `./local_build.sh build` to build systems locally and make them available in the store. This is useful if you want to serve the result as a substituter (requires configuration on each client)
-4. run `./populate_chroot.sh`
-5. hosts will pickup changes and run a rebuild
+2. run `sudo ./populate_chroot.sh` to verify, build every system, and publish the configuration files on the SFTP server
+3. hosts will pickup changes and run a rebuild
 
 # Track each host state
 
@@ -108,7 +106,7 @@ Here are the steps to add a server named `kikimora` to bento:
 4. copy kikimora's config (usually `/etc/nixos/` in bento `hosts/kikimora/` directory
 5. add utils/bento.nix to its config (in `hosts/kikimora` run `ln -s ../../utils .` and add `./utils/bento.nix` in `imports` list)
 6. check kikimora's config locally with `./local_build.sh`, you can check only kikimora with `env NAME=kikimora ./local_build.sh`
-7. populate the chroot with `sudo ./populate_chroot.sh` to copy the files in `/home/chroot/kikimora/`
+7. populate the chroot with `sudo ./populate_chroot.sh` to copy the files in `/home/chroot/kikimora/config/`
 8. run bootstrap script on kikimora to switch to the new configuration from sftp and enable the timer to poll for upgrades
 9. you can get bento's log with `journalctl -u bento-upgrade.service` and see next timer information with `systemctl status bento-upgrade.timer`
 
@@ -117,9 +115,8 @@ Here are the steps to add a server named `kikimora` to bento:
 Here are the steps to deploy a change in a host managed with **bento**
 
 1. edit its configuration file to make the changes in `hosts/the_host_name/something.nix`
-2. OPTIONAL: run `./local_build.sh` to check if the configurations are valid
-3. run `sudo ./populate_chroot.sh`
-4. wait for the timer of that system to trigger the update
+2. run `sudo ./populate_chroot.sh` to build and publish configuration files
+3. wait for the timer of that system to trigger the update, or ask the user to open http://localhost:51337/ to force the update
 
 If you don't want to wait for the timer, you can ssh into the machine to run `systemctl start bento-upgrade.service`
 
