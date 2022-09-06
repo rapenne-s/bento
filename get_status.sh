@@ -33,12 +33,12 @@ do
 
     # date calculation
     LASTLOG=$(find "${i}/logs/" -type f | sort -n | tail -n 1)
-    LASTLOGVERSION="$(echo $LASTLOG | awk -F '_' '{ print $2 }' | awk -F '-' '{ print $1 }' )"
-    NIXPKGS_DATE="$(echo $LASTLOG | awk -F '_' '{ print $2 }' | awk -F '-' '{ printf("%s", $NF) }' )"
+    LASTLOGVERSION="$(echo "$LASTLOG" | awk -F '_' '{ print $2 }' | awk -F '-' '{ print $1 }' )"
+    NIXPKGS_DATE="$(echo "$LASTLOG" | awk -F '_' '{ print $2 }' | awk -F '-' '{ printf("%s", $NF) }' )"
     LASTTIME=$(date -r "$LASTLOG" "+%s")
     LASTCONFIG=$(date -r "${i}/last_change_date" "+%s")
-    ELAPSED_SINCE_UPDATE="build $(elapsed_time $(( $(date +%s) - $LASTTIME )))"
-    ELAPSED_SINCE_LATE="new config $(elapsed_time $(( $(date +%s) - $LASTCONFIG)))"
+    ELAPSED_SINCE_UPDATE="build $(elapsed_time $(( $(date +%s) - "$LASTTIME" )))"
+    ELAPSED_SINCE_LATE="new config $(elapsed_time $(( $(date +%s) - "$LASTCONFIG")))"
 
     EXPECTED_CONFIG="$(awk -F '=' -v host="${i}" 'host == $1 { print $2 }' states.txt | cut -b 1-8)"
 
@@ -51,7 +51,7 @@ do
         MATCH_IF=0
     fi
 
-    SHORT_VERSION="$(echo $LASTLOGVERSION | cut -b 1-8)"
+    SHORT_VERSION="$(echo "$LASTLOGVERSION" | cut -b 1-8)"
 
     if [ "$(echo "$RESULT" | awk 'END { print NR }')" -gt 1 ]
     then
