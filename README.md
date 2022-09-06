@@ -130,7 +130,7 @@ If you don't want to wait for the timer, you can ssh into the machine to run `sy
 - being able to create a podman compatible NixOS image that would be used as the chroot server, to avoid reconfiguring the host and use sudo to distribute files
 - auto rollback like "magicrollback" by deploy-rs in case of losing connectivity after an upgrade
 - `local_build.sh` and `populate_chroot` should be only one command installed in `$PATH`
-- upgrades could be triggered by the user by accessing a local socket, like opening a web page in a web browser to trigger it, if it returns output that'd be better
+- DONE ~~upgrades could be triggered by the user by accessing a local socket, like opening a web page in a web browser to trigger it, if it returns output that'd be better~~
 - a way to tell a client (when using flakes) to try to update flakes every time even if no configuration changed, to keep them up to date
 
 ## Minor
