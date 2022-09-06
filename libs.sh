@@ -70,7 +70,7 @@ if test -f flake.nix
 then
     nixos-rebuild build --flake .#bento-machine
     SUCCESS=\$?
-    if [ "$\SUCCESS" -eq 0 ]
+    if [ "\${SUCCESS}" -eq 0 ]
     then
         if [ ! "\${RESULT}" = "\$(readlink -f result)" ]
         then
@@ -87,7 +87,7 @@ else
     export NIX_PATH=/root/.nix-defexpr/channels:nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos:nixos-config=/var/bento/configuration.nix:/nix/var/nix/profiles/per-user/root/channels
     nixos-rebuild build --no-flake --upgrade 2>&1 | tee \$LOGFILE
     SUCCESS=\$?
-    if [ "$\SUCCESS" -eq 0 ]
+    if [ "\${SUCCESS}" -eq 0 ]
     then
         if [ ! "\${RESULT}" = "\$(readlink -f result)" ]
         then
