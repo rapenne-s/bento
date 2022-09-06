@@ -21,10 +21,10 @@ PRETTY_OUT_COLUMN=$(ls -1 | awk '{ if(length($1) > max) { max = length($1) }} EN
 
 # printf isn't aware of emojis, need -2 chars per emoji
 printf "%${PRETTY_OUT_COLUMN}s %15s %16s %18s %40s\n" \
-	"machine" "local version" "remote version" "state" "time"
+	"machine" "local version" "remote version" "state" "elapsed time since"
 
 printf "%${PRETTY_OUT_COLUMN}s %15s %16s %18s %40s\n" \
-	"-------" "---------" "-----------" "-------------" "----"
+	"-------" "---------" "-----------" "-------------" "-------------"
 
 for i in *
 do
