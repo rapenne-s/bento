@@ -67,15 +67,12 @@ find . -maxdepth 1 -type f -not -name .state -and -not -name update.sh -and -not
 
 printf "%s\n" "cd config" "get -R ." | sftp -r ${i}@${REMOTE_IP}:
 
-# for flakes
+# required by flakes
 test -d .git || git init
 git add .
 
 # check the current build if it exists
-if test -L result
-then
-    RESULT="\$(readlink -f result)"
-fi
+OSVERSION="\$(basename \$(readlink -f /nix/var/nix/profiles/system))"
 
 LOGFILE=\$(mktemp /tmp/build-log.XXXXXXXXXXXXXXXXXXXX)
 
@@ -86,11 +83,19 @@ then
     SUCCESS=\$?
     if [ "\${SUCCESS}" -eq 0 ]
     then
-        if [ ! "\${RESULT}" = "\$(readlink -f result)" ]
+        if [ ! "\${OSVERSION}" = "\$(basename \$(readlink -f result))" ]
         then
             nixos-rebuild switch --flake .#bento-machine 2>&1 | tee \$LOGFILE
             SUCCESS=\$(( SUCCESS + \$? ))
-            if [ -z "\${RESULT}" ]; then RESULT="\$(readlink -f result)" ; fi
+
+            # did we change the OSVERSION?
+            NEWVERSION="\$(basename \$(readlink -f /nix/var/nix/profiles/system))"
+            if [ "\${OSVERSION}" = "\${NEWVERSION}" ]
+            then
+                SUCCESS=1
+            else
+                OSVERSION="\${NEWVERSION}"
+            fi
         else
             # we want to report a success log
             # no configuration changed but Bento did
@@ -103,11 +108,19 @@ else
     SUCCESS=\$?
     if [ "\${SUCCESS}" -eq 0 ]
     then
-        if [ ! "\${RESULT}" = "\$(readlink -f result)" ]
+        if [ ! "\${OSVERSION}" = "\$(basename \$(readlink -f result))" ]
         then
             nixos-rebuild switch --no-flake --upgrade 2>&1 | tee -a \$LOGFILE
             SUCCESS=\$(( SUCCESS + \$? ))
-            if [ -z "\${RESULT}" ]; then RESULT="\$(readlink -f result)" ; fi
+
+            # did we change the OSVERSION?
+            NEWVERSION="\$(basename \$(readlink -f /nix/var/nix/profiles/system))"
+            if [ "\${OSVERSION}" = "\${NEWVERSION}" ]
+            then
+                SUCCESS=1
+            else
+                OSVERSION="\${NEWVERSION}"
+            fi
         else
             # we want to report a success log
             # no configuration changed but Bento did
@@ -131,11 +144,10 @@ fi
 gzip -9 \$LOGFILE
 if [ "\$SUCCESS" -eq 0 ]
 then
-    echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)-\${RESULT#/nix/store/}-success.log.gz" | sftp ${i}@${REMOTE_IP}:
+    echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_success.log.gz" | sftp ${i}@${REMOTE_IP}:
 else
-    echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)-\${RESULT#/nix/store/}-failure.log.gz" | sftp ${i}@${REMOTE_IP}:
+    echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_failure.log.gz" | sftp ${i}@${REMOTE_IP}:
 fi
-
 rm "\${LOGFILE}.gz"
 EOF
 
