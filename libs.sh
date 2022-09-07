@@ -169,12 +169,28 @@ then
     fi
 fi
 
+# rollback if something is wrong
+# we test connection to the sftp server
+echo "ls -l last_change_date" | sftp ${i}@${REMOTE_IP} >"\${LOGFILE}"
+if [ "\$?" -ne 0 ];
+then
+    nixos-rebuild --rollback switch
+    SUCCESS=255
+    OSVERSION="\$(basename \$(readlink -f /nix/var/nix/profiles/system))"
+fi
+
 gzip -9 \$LOGFILE
 if [ "\$SUCCESS" -eq 0 ]
 then
     echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_success.log.gz" | sftp ${i}@${REMOTE_IP}:
 else
-    echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_failure.log.gz" | sftp ${i}@${REMOTE_IP}:
+    # check if we did a rollback
+    if [ "\$SUCCESS" -eq 255 ]
+    then
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_rollback.log.gz" | sftp ${i}@${REMOTE_IP}:
+    else
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_failure.log.gz" | sftp ${i}@${REMOTE_IP}:
+    fi
 fi
 rm "\${LOGFILE}.gz"
 EOF
