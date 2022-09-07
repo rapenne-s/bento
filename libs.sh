@@ -96,7 +96,7 @@ else
     echo "update required"
     sftp ${i}@${REMOTE_IP}:/config/bootstrap.sh .
     /bin/sh bootstrap.sh
-    echo "\$STATE" > /var/bento/.state
+    echo "\${STATE}" > "/var/bento/.state"
 fi
 rm "\${STATEFILE}"
 EOF

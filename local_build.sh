@@ -26,7 +26,7 @@ else # not using switch or test
     SUDO=""
 fi
 
-cd hosts
+cd hosts || exit 5
 if [ -z "${NAME}" ]
 then
     NAME=*
