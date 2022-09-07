@@ -33,21 +33,37 @@ do
 
     # date calculation
     LASTLOG=$(find "${i}/logs/" -type f | sort -n | tail -n 1)
+    LASTCONFIG=$(date -r "${i}/last_change_date" "+%s")
+    ELAPSED_SINCE_LATE="new config $(elapsed_time $(( $(date +%s) - "$LASTCONFIG")))"
+    EXPECTED_CONFIG="$(awk -F '=' -v host="${i}" 'host == $1 { print $2 }' states.txt | cut -b 1-8)"
+
+    if [ -z "${EXPECTED_CONFIG}" ]; then EXPECTED_CONFIG="non-flakes" ; fi
+
+    # skip if no logs (for new hosts)
+    if     [ -z "${LASTLOG}" ]
+    then
+        display_table "$PRETTY_OUT_COLUMN" "$i" "${EXPECTED_CONFIG}" "" "new machine    "  "($ELAPSED_SINCE_LATE)    "
+        continue
+    fi
+
     LASTLOGVERSION="$(echo "$LASTLOG" | awk -F '_' '{ print $2 }' | awk -F '-' '{ print $1 }' )"
     NIXPKGS_DATE="$(echo "$LASTLOG" | awk -F '_' '{ print $2 }' | awk -F '-' '{ printf("%s", $NF) }' )"
     LASTTIME=$(date -r "$LASTLOG" "+%s")
-    LASTCONFIG=$(date -r "${i}/last_change_date" "+%s")
     ELAPSED_SINCE_UPDATE="build $(elapsed_time $(( $(date +%s) - "$LASTTIME" )))"
-    ELAPSED_SINCE_LATE="new config $(elapsed_time $(( $(date +%s) - "$LASTCONFIG")))"
 
-    EXPECTED_CONFIG="$(awk -F '=' -v host="${i}" 'host == $1 { print $2 }' states.txt | cut -b 1-8)"
 
     if grep "^${i}=${LASTLOGVERSION}" states.txt >/dev/null
     then
         MATCH="💚"
         MATCH_IF=1
     else
-        MATCH="🛑"
+        # we don't know the state of a non-flake
+        if [ "${EXPECTED_CONFIG}" = "non-flakes" ]
+        then
+            MATCH="    "
+        else
+            MATCH="🛑"
+        fi
         MATCH_IF=0
     fi
 

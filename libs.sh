@@ -26,7 +26,10 @@ build_config()
     if [ $? -eq 0 ]; then printf "success " ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat "${TMPLOG}" ; fi
     ELAPSED=$(elapsed_time $SECONDS)
     printf "($ELAPSED)"
-    if [ "${COMMAND}" = "build" ]
+
+    # systems not using flakes are not reproducible
+    # without pinning the channels, skip this
+    if [ -f "flake.nix" ] && [ "${COMMAND}" = "build" ]
     then
         touch "${OLDPWD}/../states.txt"
         VERSION="$(readlink -f result | tr -d '\n' | sed 's,/nix/store/,,')"
