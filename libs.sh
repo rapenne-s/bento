@@ -72,6 +72,9 @@ install -d -o root -g root -m 700 /var/bento
 cd /var/bento || exit 5
 touch .state
 
+# don't get stuck if we change the host
+ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan "${REMOTE_IP}" >> /root/.ssh/known_hosts
+
 STATEFILE="\$(mktemp /tmp/bento-state.XXXXXXXXXXXXXXXX)"
 echo "ls -l last_change_date" | sftp ${i}@${REMOTE_IP} >"\${STATEFILE}"
 
