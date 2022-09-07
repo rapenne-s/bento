@@ -53,12 +53,15 @@ do
 
     SHORT_VERSION="$(echo "$LASTLOGVERSION" | cut -b 1-8)"
 
+    # Too many logs while there should be only one
     if [ "$(echo "$RESULT" | awk 'END { print NR }')" -gt 1 ]
     then
         display_table "$PRETTY_OUT_COLUMN" "$i" "${EXPECTED_CONFIG}" "${SHORT_VERSION} ${MATCH}" "extra logs 🔥" "($ELAPSED_SINCE_UPDATE) ($ELAPSED_SINCE_LATE)"
         continue
     fi
 
+    # no result since we updated configuration files
+    # the client is not up to date
     if [ -z "$RESULT" ]
     then
         if [ "${MATCH_IF}" -eq 0 ]
@@ -67,14 +70,25 @@ do
         else
             display_table "$PRETTY_OUT_COLUMN" "$i" "${EXPECTED_CONFIG}" "${SHORT_VERSION} ${MATCH}" "sync pending 🚩" "($ELAPSED_SINCE_UPDATE) ($ELAPSED_SINCE_LATE)"
         fi
+        # if no new log
+        # then it can't be in another further state
+        continue
     fi
 
-    if echo "$RESULT" | grep success >/dev/null
+    # check if latest log contains rollback
+    if echo "$LASTLOG" | grep rollback >/dev/null
+    then
+        display_table "$PRETTY_OUT_COLUMN" "$i" "${EXPECTED_CONFIG}" "${SHORT_VERSION} ${MATCH}" "    rollbacked ⏪" "($ELAPSED_SINCE_UPDATE)"
+    fi
+
+    # check if latest log contains success
+    if echo "$LASTLOG" | grep success >/dev/null
     then
         display_table "$PRETTY_OUT_COLUMN" "$i" "${EXPECTED_CONFIG}" "${SHORT_VERSION} ${MATCH}" "    up to date 💚" "($ELAPSED_SINCE_UPDATE)"
     fi
 
-    if echo "$RESULT" | grep failure >/dev/null
+    # check if latest log contains failure
+    if echo "$LASTLOG" | grep failure >/dev/null
     then
         display_table "$PRETTY_OUT_COLUMN" "$i" "${EXPECTED_CONFIG}" "${SHORT_VERSION} ${MATCH}" "       failing 🔥" "($ELAPSED_SINCE_UPDATE) ($ELAPSED_SINCE_LATE)"
     fi
