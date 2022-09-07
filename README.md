@@ -131,6 +131,7 @@ With the script `get_status.sh`, you instantly get a report of your fleet, all e
   - **up to date**: everything is fine
   - **extra logs**: the update process has been run more than necessary, this shouldn't happen. The most common case is to run the update service manually.
   - **failing**: the update process failed
+  - **rollbacked**: the update process failed and a rollback has been done to previous version. **Bento** won't try until a new configuration is available.
 - the time elapsed since last rebuild
 - the time elapsed since the new onfiguration has been made available
 
@@ -151,7 +152,7 @@ Example of output:
 
 - DONE ~~client should report their current version after an upgrade, we should be able to compute the same value from the config on the server side, this would allow to check if a client is correctly up to date~~
 - being able to create a podman compatible NixOS image that would be used as the chroot server, to avoid reconfiguring the host and use sudo to distribute files
-- auto rollback like "magicrollback" by deploy-rs in case of losing connectivity after an upgrade
+- DONE ~~auto rollback like "magicrollback" by deploy-rs in case of losing connectivity after an upgrade~~
 - `local_build.sh` and `populate_chroot` should be only one command installed in `$PATH`
 - DONE ~~upgrades could be triggered by the user by accessing a local socket, like opening a web page in a web browser to trigger it, if it returns output that'd be better~~
 - a way to tell a client (when using flakes) to try to update flakes every time even if no configuration changed, to keep them up to date
