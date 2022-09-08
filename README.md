@@ -136,14 +136,17 @@ With the script `get_status.sh`, you instantly get a report of your fleet, all e
 - the time elapsed since last rebuild
 - the time elapsed since the new onfiguration has been made available
 
+Non-flakes systems aren't reproducible (without efforts), so we can't compare the remote version with the local one, but we can report this information.
+
 Example of output:
 
 ```
    machine   local version   remote version              state                                     time
    -------       ---------      -----------      -------------                                     ----
+  interbus      non-flakes      1dyc4lgr 📌      up to date 💚                              (build 11s)
   kikimora        996vw3r6      996vw3r6 💚    sync pending 🚩       (build 5m 53s) (new config 2m 48s)
        nas        r7ips2c6      lvbajpc5 🛑 rebuild pending 🚩       (build 5m 49s) (new config 1m 45s)
-      t470        ih7vxijm      ih7vxijm 💚      up to date 💚                           (build 2m 24s)
+      t470        b2ovrtjy      ih7vxijm 🛑      rollbacked 🔃                           (build 2m 24s)
         x1        fcz1s2yp      fcz1s2yp 💚      up to date 💚                           (build 2m 37s)
 ```
 
