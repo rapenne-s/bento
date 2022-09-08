@@ -219,14 +219,19 @@ EOF
         if [ "$CHANGES" -ne 0 ]
         then
             build_config "${STAGING_DIR}/${i}/config/" "build" "" "${i}"
-            echo " update required"
-            # copy files in the chroot
-            install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}"
-            install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}"
-            install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}/config"
-            install -d -o "${i}" -g sftp_users -m 755 "${CHROOT_DIR}/${i}/logs"
-            rsync --delete -rltgoDL "${STAGING_DIR}/${i}/config/" "${CHROOT_DIR}/${i}/config/"
-            touch "${CHROOT_DIR}/${i}/last_change_date"
+            if [ $? -eq 0 ]
+            then
+                echo " update required"
+                # copy files in the chroot
+                install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}"
+                install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}"
+                install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${i}/config"
+                install -d -o "${i}" -g sftp_users -m 755 "${CHROOT_DIR}/${i}/logs"
+                rsync --delete -rltgoDL "${STAGING_DIR}/${i}/config/" "${CHROOT_DIR}/${i}/config/"
+                touch "${CHROOT_DIR}/${i}/last_change_date"
+            else
+                echo " an error occured"
+            fi
         else
             echo " no changes"
         fi
