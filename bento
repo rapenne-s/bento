@@ -1,5 +1,9 @@
 #!/bin/sh
 
+echo $0
+ls $0/utils.nix
+exit 0
+
 if test -f config.sh
 then
     . ./config.sh
@@ -18,6 +22,8 @@ user_exists() {
     fi
 }
 
+# used for the status function
+# to try to align information
 display_table() {
     size_hostname=$1
     machine=$2
@@ -30,6 +36,8 @@ display_table() {
         "$machine" "$local_version" "$remote_version" "$state" "$time"
 }
 
+# used to build a configuration locally
+# or switch/test it
 build_config()
 {
     SOURCES=$1
@@ -79,6 +87,11 @@ build_config()
     return "${SUCCESS}"
 }
 
+# create the remote scripts
+# populate a fake directory
+# build in it
+# populate the chroot
+# abort if nothing changed
 deploy_files() {
     sources="$1"
     user="$2"
@@ -286,6 +299,8 @@ EOF
         fi
 }
 
+# simple calculation to display
+# elapsed times from a parameter in seconds
 elapsed_time() {
     RAW="$1"
 
@@ -310,14 +325,13 @@ elapsed_time() {
     echo "$DURATION"
 }
 
-
-
-
 # CODE BEGINS HERE
 
-cd hosts
+cd hosts || exit 5
 
 # load all hosts or the one defined in environment variable NAME
+# we need a lot of boilerplate to compare configuration in flakes
+# and configuration not in flakes using directory as their name
 FLAKES=$(
 for flakes in $(find . -name flake.nix)
 do
@@ -326,11 +340,13 @@ do
 done
 )
 
+# if we don't give a name as an environment variable
 if [ -z "${NAME}" ]
 then
     NAME=*
     PRETTY_OUT_COLUMN=$( ( ls -1 ; echo $FLAKES ) | awk '{ if(length($1) > max) { max = length($1) }} END { print max }')
 else
+    # otherwise we need to figure if a directory name or a flake output has that name
     MATCH=$(echo "$FLAKES" | awk -v name="${NAME}" 'BEGIN { sum = 0 } name == $1 { sum=sum+1 } END { print sum }')
     if [ "$MATCH" -ne 1 ]
     then
@@ -343,6 +359,8 @@ else
             FLAKES_IN_DIR=$(nix flake show --json "path:$TARGET" | jq -r '.nixosConfigurations | keys[]')
             if echo "${FLAKES_IN_DIR}" | grep "^${NAME}$" >/dev/null
             then
+                # we need to keep the flake directory path
+                # AND the flake target name
                 # store the configuration name
                 SINGLE_FLAKE="${NAME}"
                 # store the directory containing it
@@ -365,7 +383,6 @@ then
 
     if [ "$COMMAND" = "switch" ] || [ "$COMMAND" = "test" ]
     then
-
         # we only allow these commands if you have only one name
         if [ -n "$NAME" ]
         then
@@ -422,12 +439,14 @@ then
 
     done
 
+    # the states files is used for the status function
     if [ -f ../states.txt ]
     then
         cp ../states.txt "${CHROOT_DIR}/states.txt"
     fi
 fi
 
+# show the status of each host
 if [ "$1" = "status" ]
 then
 
