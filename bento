@@ -1,14 +1,41 @@
 #!/bin/sh
 
-if test -f config.sh
-then
-    . ./config.sh
-else
-    echo "You are missing config.sh"
-    exit 2
-fi
+check_bento() {
+    IS_BENTO=1
+    test -d hosts || IS_BENTO=0
+    test -f config.sh || IS_BENTO=0
+    if [ "${IS_BENTO}" -eq 0 ]
+    then
+        echo "ERROR"
+        echo "$PWD isn't a bento compatible directory, you need a host directory and a config.sh file"
+        exit 6
+    fi
+}
+
+check_bento
+. ./config.sh
 
 # FUNCTION LIBRARIES
+usage() {                                                                                    
+    cat <<EOF
+usage: bento deploy | build [test|switch] | status
+
+bento deploy
+: build configurations and deploy configuration files, require to be root
+
+bento build [test|switch]
+: build configurations, can activate (test or switch) a build locally
+
+bento status
+: display information for remote hosts
+
+env NAME=someconfig bento deploy|build
+: only build / deploy the system "someconfig"
+EOF
+    exit 0
+}
+
+
 user_exists() {
     user="$1"
     if ! id "${user}" >/dev/null 2>/dev/null
@@ -440,6 +467,7 @@ then
     then
         cp ../states.txt "${CHROOT_DIR}/states.txt"
     fi
+    exit 0
 fi
 
 # show the status of each host
@@ -542,4 +570,7 @@ then
         fi
 
     done
+    exit 0
 fi
+
+usage
