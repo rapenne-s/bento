@@ -7,10 +7,10 @@
 
     packages.x86_64-linux.default =
       with import nixpkgs { system = "x86_64-linux"; };
+
       stdenv.mkDerivation {
-        name = "bento";
+        name = "bento-1.0.2";
         src = self;
-        version = "1.0.2";
 
         installPhase = ''
           mkdir -p $out/bin
