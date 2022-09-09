@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 check_bento() {
     IS_BENTO=1
