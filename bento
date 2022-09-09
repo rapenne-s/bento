@@ -244,7 +244,7 @@ build_config()
     fi
     if [ $? -eq 0 ]; then printf "success " ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat "${TMPLOG}" ; fi
     ELAPSED=$(elapsed_time $SECONDS)
-    printf "($ELAPSED)"
+    printf "(%s)" "${ELAPSED}"
 
     # systems not using flakes are not reproducible
     # without pinning the channels, skip this
@@ -286,7 +286,7 @@ deploy_files() {
 
     user_exists "${dest}"
 
-    printf "Copying ${dest}: "
+    printf "Copying %s: " "${dest}"
 
     # we only want directories
     if [ -d "$i" ]
@@ -366,7 +366,7 @@ cd hosts || exit 5
 FLAKES=$(
 for flakes in $(find . -name flake.nix)
 do
-    TARGET="$(dirname $flakes)"
+    TARGET="$(dirname "${flakes}")"
     nix flake show --json "path:$TARGET" | jq -r '.nixosConfigurations | keys[]'
 done
 )
@@ -375,7 +375,7 @@ done
 if [ -z "${NAME}" ]
 then
     NAME=*
-    PRETTY_OUT_COLUMN=$( ( ls -1 ; echo $FLAKES ) | awk '{ if(length($1) > max) { max = length($1) }} END { print max }')
+    PRETTY_OUT_COLUMN=$( ( ls -1 ; echo "$FLAKES" ) | awk '{ if(length($1) > max) { max = length($1) }} END { print max }')
 else
     # otherwise we need to figure if a directory name or a flake output has that name
     MATCH=$(echo "$FLAKES" | awk -v name="${NAME}" 'BEGIN { sum = 0 } name == $1 { sum=sum+1 } END { print sum }')
@@ -395,7 +395,7 @@ else
                 # store the configuration name
                 SINGLE_FLAKE="${NAME}"
                 # store the directory containing it
-                NAME="$(basename ${TARGET})"
+                NAME="$(basename "${TARGET}")"
             fi
         done
     fi
@@ -418,8 +418,9 @@ then
         if [ -n "$NAME" ]
         then
             SUDO="sudo"
-            echo "you are about to $COMMAND $NAME, are you sure? Ctrl+C to abort"
-            read a
+            echo "you are about to $COMMAND $NAME, are you sure? (yes/no)"
+            read -r answer
+            [ "${answer}" = "yes" ] || exit 1
         else
             echo "you can't use $COMMAND without giving a single configuration to use with variable NAME"
         fi
@@ -521,7 +522,7 @@ then
         fi
 
         LASTLOGVERSION="$(echo "$LASTLOG" | awk -F '_' '{ print $2 }' | awk -F '-' '{ print $1 }' )"
-        NIXPKGS_DATE="$(echo "$LASTLOG" | awk -F '_' '{ print $2 }' | awk -F '-' '{ printf("%s", $NF) }' )"
+        #NIXPKGS_DATE="$(echo "$LASTLOG" | awk -F '_' '{ print $2 }' | awk -F '-' '{ printf("%s", $NF) }' )"
         LASTTIME=$(date -r "$LASTLOG" "+%s")
         ELAPSED_SINCE_UPDATE="build $(elapsed_time $(( $(date +%s) - "$LASTTIME" )))"
 
