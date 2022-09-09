@@ -169,7 +169,7 @@ Example of output:
 - DONE ~~`local_build.sh` and `populate_chroot` should be only one command installed in `$PATH`~~
 - DONE ~~upgrades could be triggered by the user by accessing a local socket, like opening a web page in a web browser to trigger it, if it returns output that'd be better~~
 - a way to tell a client (when using flakes) to try to update flakes every time even if no configuration changed, to keep them up to date
-- ~~being able to use a single flakes with multiple hosts that **bento** will automatically assign to the nixosConfiguration names as hosts~~
+- DONE ~~being able to use a single flakes with multiple hosts that **bento** will automatically assign to the nixosConfiguration names as hosts~~
 
 ## Minor
 
