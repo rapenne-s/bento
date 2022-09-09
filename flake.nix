@@ -10,7 +10,7 @@
       stdenv.mkDerivation {
         name = "bento";
         src = self;
-        version = "1.0.1";
+        version = "1.0.2";
 
         installPhase = ''
           mkdir -p $out/bin
