@@ -399,7 +399,7 @@ if [ "$1" = "build" ]
 then
     if [ -z "$2" ]
     then
-      COMMAND="dry-build"
+      COMMAND="build"
     else
       COMMAND="$2"
     fi
@@ -415,10 +415,16 @@ then
         else
             echo "you can't use $COMMAND without giving a single configuration to use with variable NAME"
         fi
-
     else # not using switch or test
         SUDO=""
     fi
+
+    if [ "$COMMAND" = "edit" ] || [ "$COMMAND" = "build-vm" ] || [ "$COMMAND" = "build-vm-with-bootloader" ]
+    then
+        echo "you are not allowed to use $COMMAND with bento"
+        exit 6
+    fi
+
     for i in $NAME
     do
         test -d "$i" || continue

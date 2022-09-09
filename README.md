@@ -35,7 +35,7 @@ The ssh server is containing all the configuration files for the machines. When 
 - `fleet.nix` file that must be included in the ssh host server configuration, it declares the hosts with their name and ssh key, creates the chroots and enable sftp for each of them. You basically need to update this file when a key change, or a host is added/removed
 - `utils/bento.nix` that has to be imported into each host configuration, it adds a systemd timer triggering a service looking for changes and potentially trigger a rebuild if any
 - `bento deploy` create copies of configuration files for each host found in `host` into the corresponding chroot directory (default is `/home/chroot/$machine/`
-- `bento build` iterates over each host configuration to run `nixos-rebuild dry-build`, but you can pass `build` as a parameter to actually build them, this ensures each configuration work, and if you use this system as a substituter you can build their configurations to offload compilations on the clients
+- `bento build` iterates over each host configuration to run `nixos-rebuild build`, but you can pass `dry-build` as a parameter if you just want to ensures each configuration is valid.
 
 On the client, the system configuration is stored in `/var/bento/` and also contains scripts `update.sh` and `bootstrap.sh` used to look for changes and trigger a rebuild.
 
@@ -104,7 +104,7 @@ Here are the steps to add a server named `kikimora` to bento:
 3. reconfigure the ssh host to allow kikimora's key (it should include the `fleet.nix` file)
 4. copy kikimora's config (usually `/etc/nixos/` in bento `hosts/kikimora/` directory
 5. add utils/bento.nix to its config (in `hosts/kikimora` run `ln -s ../../utils .` and add `./utils/bento.nix` in `imports` list)
-6. check kikimora's config locally with `bento build`, you can check only `kikimora` with `env NAME=kikimora bento build`
+6. check kikimora's config locally with `bento build dry-build`, you can check only `kikimora` with `env NAME=kikimora bento build dry-build`
 7. populate the chroot with `sudo bento deploy` to copy the files in `/home/chroot/kikimora/config/`
 8. run bootstrap script on kikimora to switch to the new configuration from sftp and enable the timer to poll for upgrades
 9. you can get bento's log with `journalctl -u bento-upgrade.service` and see next timer information with `systemctl status bento-upgrade.timer`
