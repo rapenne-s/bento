@@ -352,6 +352,8 @@ else
     fi
 fi
 
+# run a command on a specific host
+# can be used to test/switch the local machine
 if [ "$1" = "build" ]
 then
     if [ -z "$2" ]
@@ -396,6 +398,7 @@ then
     exit 0
 fi
 
+# populate the chroot with configuration files
 if [ "$1" = "deploy" ]
 then
     if [ "$(id -u)" -ne 0 ]
