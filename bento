@@ -477,7 +477,7 @@ then
             # we don't know the state of a non-flake
             if [ "${EXPECTED_CONFIG}" = "non-flakes" ]
             then
-                MATCH="    "
+                MATCH="📌"
             else
                 MATCH="🛑"
             fi
