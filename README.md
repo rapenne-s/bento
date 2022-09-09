@@ -28,14 +28,14 @@ This setup need a machine to be online most of the time.  NixOS systems (clients
 
 # How it works
 
-The ssh server is containing all the configuration files for the machines. When you make a change, you run a script copying all the configuration files to a new directory used by each client as a sftp chroot, each client regularly poll for changes in their dedicated sftp directory and if it changed, they download all the configuration files and run nixos-rebuild. It automatically detects if the configuration is using flakes or not.
+The ssh server is containing all the configuration files for the machines. When you make a change, run `bento` to rebuild systems and copy all the configuration files to a new directory used by each client as a sftp chroot, each client regularly poll for changes in their dedicated sftp directory and if it changed, they download all the configuration files and run nixos-rebuild. It automatically detects if the configuration is using flakes or not.
 
-**Bento** is just a framework and a few scripts to make this happening, ideally this should be a command in `$PATH` instead of scripts in your configuration directory:
+`bento` is the only script to add to `$PATH`, however a few other files are required to setup your configuration management:
 
-- `populate_chroot.sh` create copies of configuration files for each host found in `host` into the corresponding chroot directory (default is `/home/chroot/$machine/`
 - `fleet.nix` file that must be included in the ssh host server configuration, it declares the hosts with their name and ssh key, creates the chroots and enable sftp for each of them. You basically need to update this file when a key change, or a host is added/removed
-- `local_build.sh` iterates over each host configuration to run `dry-build`, but you can pass `build` as a parameter, this ensures each configuration work, and if you use this system as a substituter you can build their configurations to offload compilations on the clients
-- `utils/bento.nix` that have to be imported into each host configuration, it adds a systemd timer triggering a service looking for changes and potentially trigger a rebuild if any
+- `utils/bento.nix` that has to be imported into each host configuration, it adds a systemd timer triggering a service looking for changes and potentially trigger a rebuild if any
+- `bento deploy` create copies of configuration files for each host found in `host` into the corresponding chroot directory (default is `/home/chroot/$machine/`
+- `bento build` iterates over each host configuration to run `nixos-rebuild dry-build`, but you can pass `build` as a parameter to actually build them, this ensures each configuration work, and if you use this system as a substituter you can build their configurations to offload compilations on the clients
 
 On the client, the system configuration is stored in `/var/bento/` and also contains scripts `update.sh` and `bootstrap.sh` used to look for changes and trigger a rebuild.
 
@@ -54,7 +54,7 @@ Here is the typical directory layout for using **bento** for three hosts `router
 │   │   ├── configuration.nix
 │   │   ├── hardware-configuration.nix
 │   │   └── utils -> ../../utils/
-│   ├── nas
+│   ├── all-flakes-systems
 │   │   ├── configuration.nix
 │   │   ├── flake.lock
 │   │   ├── flake.nix
@@ -71,8 +71,6 @@ Here is the typical directory layout for using **bento** for three hosts `router
 │       ├── nfs.nix
 │       ├── nvidia.nix
 │       └── utils -> ../../utils/
-├── local_build.sh
-├── populate_chroot.sh
 ├── README.md
 └── utils
     └── bento.nix
@@ -82,14 +80,14 @@ Here is the typical directory layout for using **bento** for three hosts `router
 # Workflow
 
 1. make configuration changes per host in `hosts/` or a global include file in `utils` (you can rename it as you wish)
-2. run `sudo ./populate_chroot.sh` to verify, build every system, and publish the configuration files on the SFTP server
+2. run `sudo bento deploy` to verify, build every system, and publish the configuration files on the SFTP server
 3. hosts will pickup changes and run a rebuild
 
 # Track each host state
 
 As each host is sending a log upon rebuild to tell if it failed or succeeded, we can use this file to check what happened since the sftp file `last_time_changed` was created.
 
-Using `./get_status.sh` you can track the current state of each hosts (time since last update, current NixOS version, status report)
+Using `bento status` you can track the current state of each hosts (time since last update, current NixOS version, status report)
 
 [![asciicast](https://asciinema.org/a/519060.svg)](https://asciinema.org/a/519060)
 
@@ -106,8 +104,8 @@ Here are the steps to add a server named `kikimora` to bento:
 3. reconfigure the ssh host to allow kikimora's key (it should include the `fleet.nix` file)
 4. copy kikimora's config (usually `/etc/nixos/` in bento `hosts/kikimora/` directory
 5. add utils/bento.nix to its config (in `hosts/kikimora` run `ln -s ../../utils .` and add `./utils/bento.nix` in `imports` list)
-6. check kikimora's config locally with `./local_build.sh`, you can check only kikimora with `env NAME=kikimora ./local_build.sh`
-7. populate the chroot with `sudo ./populate_chroot.sh` to copy the files in `/home/chroot/kikimora/config/`
+6. check kikimora's config locally with `bento build`, you can check only `kikimora` with `env NAME=kikimora bento build`
+7. populate the chroot with `sudo bento deploy` to copy the files in `/home/chroot/kikimora/config/`
 8. run bootstrap script on kikimora to switch to the new configuration from sftp and enable the timer to poll for upgrades
 9. you can get bento's log with `journalctl -u bento-upgrade.service` and see next timer information with `systemctl status bento-upgrade.timer`
 
@@ -116,7 +114,7 @@ Here are the steps to add a server named `kikimora` to bento:
 Here are the steps to deploy a change in a host managed with **bento**
 
 1. edit its configuration file to make the changes in `hosts/the_host_name/something.nix`
-2. run `sudo ./populate_chroot.sh` to build and publish configuration files
+2. run `sudo bento deploy` to build and publish configuration files
 3. wait for the timer of that system to trigger the update, or ask the user to open http://localhost:51337/ to force the update
 
 If you don't want to wait for the timer, you can ssh into the machine to run `systemctl start bento-upgrade.service`
@@ -157,7 +155,7 @@ Example of output:
 - DONE ~~client should report their current version after an upgrade, we should be able to compute the same value from the config on the server side, this would allow to check if a client is correctly up to date~~
 - being able to create a podman compatible NixOS image that would be used as the chroot server, to avoid reconfiguring the host and use sudo to distribute files
 - DONE ~~auto rollback like "magicrollback" by deploy-rs in case of losing connectivity after an upgrade~~
-- `local_build.sh` and `populate_chroot` should be only one command installed in `$PATH`
+- DONE ~~`local_build.sh` and `populate_chroot` should be only one command installed in `$PATH`~~
 - DONE ~~upgrades could be triggered by the user by accessing a local socket, like opening a web page in a web browser to trigger it, if it returns output that'd be better~~
 - a way to tell a client (when using flakes) to try to update flakes every time even if no configuration changed, to keep them up to date
 - being able to use a single flakes with multiple hosts that **bento** will automatically assign to the nixosConfiguration names as hosts
