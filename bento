@@ -1,9 +1,5 @@
 #!/bin/sh
 
-echo $0
-ls $0/utils.nix
-exit 0
-
 if test -f config.sh
 then
     . ./config.sh
