@@ -1,24 +1,12 @@
 #!/usr/bin/env bash
 
-check_bento() {
-    IS_BENTO=1
-    test -d hosts || IS_BENTO=0
-    test -f config.sh || IS_BENTO=0
-    if [ "${IS_BENTO}" -eq 0 ]
-    then
-        echo "ERROR"
-        echo "$PWD isn't a bento compatible directory, you need a host directory and a config.sh file"
-        exit 6
-    fi
-}
-
-check_bento
-. ./config.sh
-
 # FUNCTION LIBRARIES
 usage() {                                                                                    
     cat <<EOF
-usage: bento deploy | build [test|switch] | status
+usage: bento init | deploy | build [test|switch] | status
+
+bento init
+: create the layout for bento in the current directory
 
 bento deploy
 : build configurations and deploy configuration files, require to be root
@@ -35,6 +23,17 @@ EOF
     exit 0
 }
 
+check_bento() {
+    IS_BENTO=1
+    test -d hosts || IS_BENTO=0
+    test -f config.sh || IS_BENTO=0
+    if [ "${IS_BENTO}" -eq 0 ]
+    then
+        echo "ERROR"
+        echo "$PWD isn't a bento compatible directory, you need a host directory and a config.sh file"
+        exit 6
+    fi
+}
 
 user_exists() {
     user="$1"
@@ -58,6 +57,19 @@ display_table() {
     printf "%${size_hostname}s %15s %18s %20s %40s\n" \
         "$machine" "$local_version" "$remote_version" "$state" "$time"
 }
+
+init() {
+    DIR="$(dirname "$0")"
+    mkdir -p utils hosts/example
+    cat "${DIR}/../share/bento.nix" > utils/bento.nix
+    cat "${DIR}/../share/fleet.nix" > fleet.nix
+    cat "${DIR}/../share/config.sh.sample" > config.sh
+    ln -s ../../utils/ hosts/example/utils
+    touch hosts/example/configuration.nix
+
+    echo "Everything is ready"
+}
+
 
 create_bento_files() {
     dest_directory="$1"
@@ -358,7 +370,6 @@ elapsed_time() {
 
 # CODE BEGINS HERE
 
-cd hosts || exit 5
 
 # load all hosts or the one defined in environment variable NAME
 # we need a lot of boilerplate to compare configuration in flakes
@@ -405,6 +416,10 @@ fi
 # can be used to test/switch the local machine
 if [ "$1" = "build" ]
 then
+    check_bento
+    . ./config.sh
+    cd hosts || exit 5
+
     if [ -z "$2" ]
     then
       COMMAND="build"
@@ -456,6 +471,10 @@ fi
 # populate the chroot with configuration files
 if [ "$1" = "deploy" ]
 then
+    check_bento
+    . ./config.sh
+    cd hosts || exit 5
+
     if [ "$(id -u)" -ne 0 ]
     then
       echo "you need to be root to run this script"
@@ -488,6 +507,9 @@ fi
 # show the status of each host
 if [ "$1" = "status" ]
 then
+    check_bento
+    . ./config.sh
+    cd hosts || exit 5
 
     cd "${CHROOT_DIR}" || exit 5
 
@@ -585,6 +607,20 @@ then
         fi
 
     done
+    exit 0
+fi
+
+if [ "$1" = "init" ]
+then
+    IS_BENTO=1
+    test -d hosts || IS_BENTO=0
+    test -f config.sh || IS_BENTO=0
+    if [ "${IS_BENTO}" -eq 0 ]
+    then
+        init
+    else
+        echo "it seems you are in a bento directory"
+    fi
     exit 0
 fi
 
