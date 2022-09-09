@@ -121,7 +121,7 @@ If you don't want to wait for the timer, you can ssh into the machine to run `sy
 
 ## Status report of the fleet
 
-With the script `get_status.sh`, you instantly get a report of your fleet, all extracted from the logs files deposited after each update:
+Using `bento status`, you instantly get a report of your fleet, all information are extracted from the logs files deposited after each update:
 
 - what is the version they should have (built locally) against the version they are currently running
 - their state:
