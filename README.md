@@ -34,7 +34,7 @@ The ssh server is containing all the configuration files for the machines. When 
 
 `bento` is the only script to add to `$PATH`, however a few other files are required to setup your configuration management:
 
-- `fleet.nix` file that must be included in the ssh host server configuration, it declares the hosts with their name and ssh key, creates the chroots and enable sftp for each of them. You basically need to update this file when a key change, or a host is added/removed
+- `utils/fleet.nix` file that must be included in the ssh host server configuration, it declares the hosts with their name and ssh key, creates the chroots and enable sftp for each of them. You basically need to update this file when a key change, or a host is added/removed
 - `utils/bento.nix` that has to be imported into each host configuration, it adds a systemd timer triggering a service looking for changes and potentially trigger a rebuild if any
 - `bento deploy` create copies of configuration files for each host found in `host` into the corresponding chroot directory (default is `/home/chroot/$machine/`
 - `bento build` iterates over each host configuration to run `nixos-rebuild build`, but you can pass `dry-build` as a parameter if you just want to ensures each configuration is valid.
@@ -47,10 +47,9 @@ There is a diagram showing the design pattern of **bento**:
 
 # Layout
 
-Here is the typical directory layout for using **bento** for three hosts `router`, `nas` and `t470`:
+Here is the typical directory layout for using **bento** for the non-flakes system `router`, a single flake my-laptop for the system `t470`, and a flake with multiples configuration in `all-flakes-systems`:
 
 ```
-├── fleet.nix
 ├── hosts
 │   ├── router
 │   │   ├── configuration.nix
@@ -62,7 +61,7 @@ Here is the typical directory layout for using **bento** for three hosts `router
 │   │   ├── flake.nix
 │   │   ├── hardware-configuration.nix
 │   │   └── utils -> ../../utils/
-│   └── t470
+│   └── my-laptop
 │       ├── configuration.nix
 │       ├── default-spec.nix
 │       ├── flake.lock
@@ -77,6 +76,7 @@ Here is the typical directory layout for using **bento** for three hosts `router
 └── utils
     └── bento.nix
     └── common-stuff.nix
+    └── fleet.nix
 ```
 
 # Workflow
@@ -94,6 +94,15 @@ Using `bento status` you can track the current state of each hosts (time since l
 [![asciicast](https://asciinema.org/a/519060.svg)](https://asciinema.org/a/519060)
 
 # Examples
+
+## Get started with bento
+
+1. `bento init`
+2. copy the configuration file of the server in a subdirectory of `hosts`, add `fleet.nix` to it
+3. add keys to `fleet.nix`
+4. run `bento deploy` as root
+5. follow deployment with `bento status`
+6. add new hosts keys to `fleet.nix` and their configuration in your `hosts` directory
 
 ## Adding a new host
 
