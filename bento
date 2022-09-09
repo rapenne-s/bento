@@ -59,94 +59,12 @@ display_table() {
         "$machine" "$local_version" "$remote_version" "$state" "$time"
 }
 
-# used to build a configuration locally
-# or switch/test it
-build_config()
-{
-    SOURCES=$1
-    COMMAND="$2"
-    SUDO="$3"
-    NAME="$4"
+create_bento_files() {
+    dest_directory="$1"
+    dest="$2"
 
-    user_exists "${NAME}"
-
-    SUCCESS=0
-    TMP="$(mktemp -d /tmp/bento-build.XXXXXXXXXXXX)"
-    TMPLOG="$(mktemp /tmp/bento-build-log.XXXXXXXXXXXX)"
-    rsync -aL "$SOURCES/" "$TMP/"
-
-    SECONDS=0
-    cd "$TMP" || exit 5
-
-    if test -f "flake.nix"
-    then
-        # add files to a git repo
-        test -d .git || git init >/dev/null 2>/dev/null
-        git add . >/dev/null
-
-        $SUDO nixos-rebuild "${COMMAND}" --flake ".#${NAME}" 2>"${TMPLOG}" >"${TMPLOG}"
-    else
-        $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>"${TMPLOG}" >"${TMPLOG}"
-    fi
-    if [ $? -eq 0 ]; then printf "success " ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat "${TMPLOG}" ; fi
-    ELAPSED=$(elapsed_time $SECONDS)
-    printf "($ELAPSED)"
-
-    # systems not using flakes are not reproducible
-    # without pinning the channels, skip this
-    if [ -f "flake.nix" ] && [ "${COMMAND}" = "build" ]
-    then
-        touch "${OLDPWD}/../states.txt"
-        VERSION="$(readlink -f result | tr -d '\n' | sed 's,/nix/store/,,')"
-        printf " %s" "${VERSION}"
-        sed -i "/^${NAME}/d" "$OLDPWD/../states.txt" >/dev/null
-        echo "${NAME}=${VERSION}" >> "$OLDPWD/../states.txt"
-    fi
-    echo ""
-
-    cd - >/dev/null || exit 5
-    rm -fr "$TMP"
-
-    return "${SUCCESS}"
-}
-
-# create the remote scripts
-# populate a fake directory
-# build in it
-# populate the chroot
-# abort if nothing changed
-deploy_files() {
-    sources="$1"
-    user="$2"
-    config="$3"
-    if [ -n "${config}" ]
-    then
-        dest="${config}"
-    else
-        dest="${sources}"
-    fi
-
-    user_exists "${dest}"
-
-    printf "Copying ${dest}: "
-
-    # we only want directories
-    if [ -d "$i" ]
-    then
-
-        STAGING_DIR="$(mktemp -d /tmp/bento-staging-dispatch.XXXXXXXXXXXXXX)"
-
-        # sftp chroot requires the home directory to be owned by root
-        install -d -o root   -g sftp_users -m 755 "${STAGING_DIR}"
-        install -d -o root   -g sftp_users -m 755 "${STAGING_DIR}/${sources}"
-        install -d -o root   -g sftp_users -m 755 "${STAGING_DIR}/${sources}/config"
-        install -d -o "${user}" -g sftp_users -m 755 "${STAGING_DIR}/${sources}/logs"
-
-        # copy files in the chroot
-        rsync --delete -rltgoDL "$sources/" "${STAGING_DIR}/${sources}/config/"
-
-        # create the script that will check for updates
-        cat > "${STAGING_DIR}/${sources}/config/update.sh" <<EOF
+    # create the script that will check for updates
+    cat > "${dest_directory}/update.sh" <<EOF
 #!/bin/sh
 
 install -d -o root -g root -m 700 /var/bento
@@ -157,7 +75,7 @@ touch .state
 ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan "${REMOTE_IP}" >> /root/.ssh/known_hosts
 
 STATEFILE="\$(mktemp /tmp/bento-state.XXXXXXXXXXXXXXXX)"
-echo "ls -l last_change_date" | sftp ${user}@${REMOTE_IP} >"\${STATEFILE}"
+echo "ls -l last_change_date" | sftp ${dest}@${REMOTE_IP} >"\${STATEFILE}"
 
 if [ \$? -ne 0 ]
 then
@@ -175,7 +93,7 @@ then
     echo "no update required"
 else
     echo "update required"
-    sftp ${user}@${REMOTE_IP}:/config/bootstrap.sh .
+    sftp ${dest}@${REMOTE_IP}:/config/bootstrap.sh .
     /bin/sh bootstrap.sh
     echo "\${STATE}" > "/var/bento/.state"
 fi
@@ -184,7 +102,7 @@ EOF
 
         # script used to download changes and rebuild
         # also used to run it manually the first time to configure the system
-        cat > "${STAGING_DIR}/${sources}/config/bootstrap.sh" <<EOF
+        cat > "${dest_directory}/bootstrap.sh" <<EOF
 #!/bin/sh
 
 # accept the remote ssh fingerprint if not already known
@@ -196,7 +114,7 @@ cd /var/bento || exit 5
 find . -maxdepth 1 -type d -exec rm -fr {} \;
 find . -maxdepth 1 -type f -not -name .state -and -not -name update.sh -and -not -name bootstrap.sh -exec rm {} \;
 
-printf "%s\n" "cd config" "get -R ." | sftp -r ${user}@${REMOTE_IP}:
+printf "%s\n" "cd config" "get -R ." | sftp -r ${dest}@${REMOTE_IP}:
 
 # required by flakes
 test -d .git || git init
@@ -258,7 +176,7 @@ fi
 
 # rollback if something is wrong
 # we test connection to the sftp server
-echo "ls -l last_change_date" | sftp ${user}@${REMOTE_IP} >"\${LOGFILE}"
+echo "ls -l last_change_date" | sftp ${dest}@${REMOTE_IP} >"\${LOGFILE}"
 if [ "\$?" -ne 0 ];
 then
     nixos-rebuild --rollback switch
@@ -269,14 +187,14 @@ fi
 gzip -9 \$LOGFILE
 if [ "\$SUCCESS" -eq 0 ]
 then
-    echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_success.log.gz" | sftp ${user}@${REMOTE_IP}:
+    echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_success.log.gz" | sftp ${dest}@${REMOTE_IP}:
 else
     # check if we did a rollback
     if [ "\$SUCCESS" -eq 255 ]
     then
-        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_rollback.log.gz" | sftp ${user}@${REMOTE_IP}:
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_rollback.log.gz" | sftp ${dest}@${REMOTE_IP}:
     else
-        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_failure.log.gz" | sftp ${user}@${REMOTE_IP}:
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_failure.log.gz" | sftp ${dest}@${REMOTE_IP}:
     fi
 fi
 rm "\${LOGFILE}.gz"
@@ -284,35 +202,125 @@ EOF
 
         # to make flakes using caching, we must avoid repositories to change everytime
         # we must ignore files that change everytime
-        cat > "${STAGING_DIR}/${sources}/config/.gitignore" <<EOF
+        cat > "${dest_directory}/.gitignore" <<EOF
 bootstrap.sh
 update.sh
 .state
 result
 last_change_date
 EOF
+}
+
+# used to build a configuration locally
+# or switch/test it
+build_config()
+{
+    SOURCES=$1
+    COMMAND="$2"
+    SUDO="$3"
+    NAME="$4"
+
+    user_exists "${NAME}"
+
+    SUCCESS=0
+    TMP="$(mktemp -d /tmp/bento-build.XXXXXXXXXXXX)"
+    TMPLOG="$(mktemp /tmp/bento-build-log.XXXXXXXXXXXX)"
+    rsync -aL "$SOURCES/" "$TMP/"
+
+    SECONDS=0
+    cd "$TMP" || exit 5
+
+    if test -f "flake.nix"
+    then
+        create_bento_files "./" "${NAME}"
+
+        # add files to a git repo
+        test -d .git || git init >/dev/null 2>/dev/null
+        git add . >/dev/null
+
+        $SUDO nixos-rebuild "${COMMAND}" --flake ".#${NAME}" 2>"${TMPLOG}" >"${TMPLOG}"
+    else
+        $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>"${TMPLOG}" >"${TMPLOG}"
+    fi
+    if [ $? -eq 0 ]; then printf "success " ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat "${TMPLOG}" ; fi
+    ELAPSED=$(elapsed_time $SECONDS)
+    printf "($ELAPSED)"
+
+    # systems not using flakes are not reproducible
+    # without pinning the channels, skip this
+    if [ -f "flake.nix" ] && [ "${COMMAND}" = "build" ]
+    then
+        touch "${OLDPWD}/../states.txt"
+        VERSION="$(readlink -f result | tr -d '\n' | sed 's,/nix/store/,,')"
+        printf " %s" "${VERSION}"
+        sed -i "/^${NAME}/d" "$OLDPWD/../states.txt" >/dev/null
+        echo "${NAME}=${VERSION}" >> "$OLDPWD/../states.txt"
+    fi
+    echo ""
+
+    cd - >/dev/null || exit 5
+    rm -fr "$TMP"
+
+    return "${SUCCESS}"
+}
+
+# create the remote scripts
+# populate a fake directory
+# build in it
+# populate the chroot
+# abort if nothing changed
+deploy_files() {
+    sources="$1"
+    user="$2"
+    config="$3"
+
+    # sources = directory
+    # config = system name for flakes
+    # or ↑→  = directory for non flakes
+    if [ -n "${config}" ]
+    then
+        dest="${config}"
+    else
+        dest="${sources}"
+    fi
+
+    user_exists "${dest}"
+
+    printf "Copying ${dest}: "
+
+    # we only want directories
+    if [ -d "$i" ]
+    then
+
+        STAGING_DIR="$(mktemp -d /tmp/bento-staging-dispatch.XXXXXXXXXXXXXX)"
+
+        # sftp chroot requires the home directory to be owned by root
+        install -d -o root   -g sftp_users -m 755 "${STAGING_DIR}"
+        install -d -o root   -g sftp_users -m 755 "${STAGING_DIR}/${dest}"
+        install -d -o root   -g sftp_users -m 755 "${STAGING_DIR}/${dest}/config"
+        install -d -o "${user}" -g sftp_users -m 755 "${STAGING_DIR}/${dest}/logs"
+
+        # copy files in the chroot
+        rsync --delete -rltgoDL "$sources/" "${STAGING_DIR}/${dest}/config/"
+
+        create_bento_files "${STAGING_DIR}/${dest}/config" "${dest}"
 
         # only distribute changes if they changed
         # this avoids bumping the time and trigger a rebuild for nothing
 
-        diff -r "${STAGING_DIR}/${sources}/config/" "${CHROOT_DIR}/${dest}/config/" >/dev/null
+        diff -r "${STAGING_DIR}/${dest}/config/" "${CHROOT_DIR}/${dest}/config/" >/dev/null
         CHANGES=$?
 
         if [ "$CHANGES" -ne 0 ]
         then
-            if [ -n "${config}" ]
-            then
-                build_config "${STAGING_DIR}/${sources}/config/" "build" "" "${config}"
-            else
-                build_config "${STAGING_DIR}/${sources}/config/" "build" "" "${sources}"
-            fi
+            build_config "${STAGING_DIR}/${dest}/config/" "build" "" "${dest}"
             echo " update required"
             # copy files in the chroot
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}"
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${dest}"
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${dest}/config"
             install -d -o "${dest}" -g sftp_users -m 755 "${CHROOT_DIR}/${dest}/logs"
-            rsync --delete -rltgoDL "${STAGING_DIR}/${sources}/config/" "${CHROOT_DIR}/${dest}/config/"
+            rsync --delete -rltgoDL "${STAGING_DIR}/${dest}/config/" "${CHROOT_DIR}/${dest}/config/"
             touch "${CHROOT_DIR}/${dest}/last_change_date"
         else
             echo " no changes"
