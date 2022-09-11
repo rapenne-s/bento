@@ -370,6 +370,7 @@ build_config()
 
     cd - >/dev/null || exit 5
     rm -fr "$TMP"
+    rm "$TMPLOG"
 
     return "${SUCCESS}"
 }
