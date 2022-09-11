@@ -335,7 +335,7 @@ build_config()
     SUCCESS=0
     TMP="$(mktemp -d /tmp/bento-build.XXXXXXXXXXXX)"
     TMPLOG="$(mktemp /tmp/bento-build-log.XXXXXXXXXXXX)"
-    rsync -aL "$SOURCES/" "$TMP/"
+    rsync -rltgoDL  "$SOURCES/" "$TMP/"
 
     SECONDS=0
     cd "$TMP" || exit 5
@@ -430,7 +430,7 @@ deploy_files() {
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${dest}"
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}/${dest}/config"
             install -d -o "${dest}" -g sftp_users -m 755 "${CHROOT_DIR}/${dest}/logs"
-            rsync --delete -rltgoDL "${STAGING_DIR}/${dest}/config/" "${CHROOT_DIR}/${dest}/config/"
+            rsync --delete -rltgoDL --chown=${dest}:sftp_users "${STAGING_DIR}/${dest}/config/" "${CHROOT_DIR}/${dest}/config/"
             touch "${CHROOT_DIR}/${dest}/last_change_date"
         else
             echo " no changes"
