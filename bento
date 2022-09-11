@@ -533,6 +533,7 @@ then
         then
             SUDO="sudo"
             echo "you are about to $COMMAND $NAME, are you sure? (yes/no)"
+            printf "> "
             read -r answer
             [ "${answer}" = "yes" ] || exit 1
         else
