@@ -91,7 +91,7 @@ As each host is sending a log upon rebuild to tell if it failed or succeeded, we
 
 Using `bento status` you can track the current state of each hosts (time since last update, current NixOS version, status report)
 
-[![asciicast](https://asciinema.org/a/519060.svg)](https://asciinema.org/a/519060)
+[![asciicast](https://asciinema.org/a/520504.svg)](https://asciinema.org/a/520504)
 
 # Self update mode
 
