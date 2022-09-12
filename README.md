@@ -118,7 +118,7 @@ This adds at least 8 kB of inbound bandwidth for each input when checking for ch
 
 Here are the steps to add a server named `kikimora` to bento:
 
-[![asciicast](https://asciinema.org/a/518834.svg)](https://asciinema.org/a/518834)
+[![asciicast](https://asciinema.org/a/sszlvggbtNOiEhxM3VBR4lwOk.svg)](https://asciinema.org/a/sszlvggbtNOiEhxM3VBR4lwOk)
 
 1. generate a ssh-key on `kikimora` for root user
 2. add kikimora's public key to bento `fleet.nix` file
