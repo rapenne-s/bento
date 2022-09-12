@@ -93,6 +93,16 @@ Using `bento status` you can track the current state of each hosts (time since l
 
 [![asciicast](https://asciinema.org/a/519060.svg)](https://asciinema.org/a/519060)
 
+# Self update mode
+
+You can create a file named `SELF_UPDATE` in a host directory using flakes. When that host will look for updates on the sftp server, if there is no changes to rebuild, if `SELF_UPDATE` exists along with a `flake.nix` file, it will try to update the inputs, if an input is updated, then the usual rebuild is happening.
+
+This is useful if you want to let remote hosts to be autonomous and pick up new nixpkgs version as soon as possible.
+
+Systems will be reported as "auto upgraded" in the `bento status` command if they rebuild after a local flake update.
+
+This adds at least 8 kB of inbound bandwidth for each input when checking for changes.
+
 # Examples
 
 ## Get started with bento

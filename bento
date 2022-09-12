@@ -89,6 +89,13 @@ display_status() {
 
         SHORT_VERSION="$(echo "$LASTLOGVERSION" | cut -b 1-8)"
 
+        # check if latest log contains success
+        if echo "$LASTLOG" | grep autoupdate >/dev/null
+        then
+            display_table "$PRETTY_OUT_COLUMN" "$i" "${EXPECTED_CONFIG}" "${SHORT_VERSION} ${MATCH}" "   auto updated 🤖" "($ELAPSED_SINCE_UPDATE)"
+            continue
+        fi
+
         # Too many logs while there should be only one
         if [ "$(echo "$RESULT" | awk 'END { print NR }')" -gt 1 ]
         then
@@ -200,7 +207,19 @@ CURRENT_STATE="\$(cat /var/bento/.state)"
 
 if [ "\$STATE" = "\$CURRENT_STATE" ]
 then
-    echo "no update required"
+    if [ -f "SELF_UPDATE" ] && [ -f flake.lock ]
+    then
+        printf "self update enabled, trying to update flakes: "
+        if nix --extra-experimental-features "nix-command flakes" flake update 2>&1 | grep "Updated"
+        then
+            echo "updated"
+            /bin/sh bootstrap.sh autoupdate
+        else
+            echo "no changes"
+        fi
+    else
+        echo "no update required"
+    fi
 else
     echo "update required"
     sftp ${dest}@${REMOTE_IP}:/config/bootstrap.sh .
@@ -221,14 +240,21 @@ ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan "${REMOTE_IP}" >> /root/.
 install -d -o root -g root -m 700 /var/bento
 cd /var/bento || exit 5
 
-find . -maxdepth 1 -type d -exec rm -fr {} \;
-find . -maxdepth 1 -type f -not -name .state -and -not -name update.sh -and -not -name bootstrap.sh -exec rm {} \;
+parameter="\$1"
+autoupdate=0
+if ! [ "\$parameter" = "autoupdate" ]
+then
+    find . -maxdepth 1 -type d -exec rm -fr {} \;
+    find . -maxdepth 1 -type f -not -name .state -and -not -name update.sh -and -not -name bootstrap.sh -exec rm {} \;
 
-printf "%s\n" "cd config" "get -R ." | sftp -r ${dest}@${REMOTE_IP}:
+    printf "%s\n" "cd config" "get -R ." | sftp -r ${dest}@${REMOTE_IP}:
 
-# required by flakes
-test -d .git || git init
-git add .
+    # required by flakes
+    test -d .git || git init
+    git add .
+else
+    autoupdate=1
+fi
 
 # check the current build if it exists
 OSVERSION="\$(basename \$(readlink -f /nix/var/nix/profiles/system))"
@@ -297,7 +323,12 @@ fi
 gzip -9 \$LOGFILE
 if [ "\$SUCCESS" -eq 0 ]
 then
-    echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_success.log.gz" | sftp ${dest}@${REMOTE_IP}:
+    if [ "\$autoupdate" -eq 1 ]
+    then
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_autoupdate.log.gz" | sftp ${dest}@${REMOTE_IP}:
+    else
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_success.log.gz" | sftp ${dest}@${REMOTE_IP}:
+    fi
 else
     # check if we did a rollback
     if [ "\$SUCCESS" -eq 255 ]
@@ -318,6 +349,7 @@ update.sh
 .state
 result
 last_change_date
+SELF_UPDATE
 EOF
 }
 
