@@ -9,7 +9,7 @@
       with import nixpkgs { system = "x86_64-linux"; };
 
       stdenv.mkDerivation {
-        name = "bento-1.0.2";
+        name = "bento-1.0.5";
         src = self;
 
         installPhase = ''
