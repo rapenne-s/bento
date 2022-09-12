@@ -194,7 +194,7 @@ ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan "${REMOTE_IP}" >> /root/.
 STATEFILE="\$(mktemp /tmp/bento-state.XXXXXXXXXXXXXXXX)"
 echo "ls -l last_change_date" | sftp ${dest}@${REMOTE_IP} >"\${STATEFILE}"
 
-if [ \$? -ne 0 ]
+if [ "\$?" -ne 0 ]
 then
     echo "There is certainly a network problem with ${REMOTE_IP}"
     echo "Aborting"
@@ -257,7 +257,7 @@ else
 fi
 
 # check the current build if it exists
-OSVERSION="\$(basename \$(readlink -f /nix/var/nix/profiles/system))"
+OSVERSION="\$(basename "\$(readlink -f /nix/var/nix/profiles/system)")"
 
 LOGFILE=\$(mktemp /tmp/build-log.XXXXXXXXXXXXXXXXXXXX)
 
@@ -267,24 +267,24 @@ then
     nixos-rebuild build --flake .#${dest}
 else
     export NIX_PATH=/root/.nix-defexpr/channels:nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos:nixos-config=/var/bento/configuration.nix:/nix/var/nix/profiles/per-user/root/channels
-    nixos-rebuild build --no-flake --upgrade 2>&1 | tee \$LOGFILE
+    nixos-rebuild build --no-flake --upgrade 2>&1 | tee "\$LOGFILE"
 fi
 
 SUCCESS=\$?
 if [ "\${SUCCESS}" -eq 0 ]
 then
-    if [ ! "\${OSVERSION}" = "\$(basename \$(readlink -f result))" ]
+    if [ ! "\${OSVERSION}" = "\$(basename "\$(readlink -f result)")" ]
     then
         if test -f flake.nix
         then
-            nixos-rebuild switch --flake .#${dest} 2>&1 | tee \$LOGFILE
+            nixos-rebuild switch --flake .#${dest} 2>&1 | tee "\$LOGFILE"
         else
-            nixos-rebuild switch --no-flake --upgrade 2>&1 | tee -a \$LOGFILE
+            nixos-rebuild switch --no-flake --upgrade 2>&1 | tee -a "\$LOGFILE"
         fi
         SUCCESS=\$(( SUCCESS + \$? ))
 
         # did we change the OSVERSION?
-        NEWVERSION="\$(basename \$(readlink -f /nix/var/nix/profiles/system))"
+        NEWVERSION="\$(basename "\$(readlink -f /nix/var/nix/profiles/system)")"
         if [ "\${OSVERSION}" = "\${NEWVERSION}" ]
         then
             SUCCESS=1
@@ -317,10 +317,10 @@ if [ "\$?" -ne 0 ];
 then
     nixos-rebuild --rollback switch
     SUCCESS=255
-    OSVERSION="\$(basename \$(readlink -f /nix/var/nix/profiles/system))"
+    OSVERSION="\$(basename "\$(readlink -f /nix/var/nix/profiles/system)")"
 fi
 
-gzip -9 \$LOGFILE
+gzip -9 "\$LOGFILE"
 if [ "\$SUCCESS" -eq 0 ]
 then
     if [ "\$autoupdate" -eq 1 ]
