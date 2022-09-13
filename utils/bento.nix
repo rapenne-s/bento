@@ -23,6 +23,7 @@ in {
       cd /var/bento
       /bin/sh update.sh
     '';
+    restartIfChanged = false;
   };
 
   systemd.sockets.listen-update = {
