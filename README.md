@@ -172,7 +172,7 @@ Example of output:
 # CAVEATS
 
 - if you propagate a new version while a host is updating, it may be incorrectly seen as "up to date" because the log file deposited will be newer than the `last_time_changed` file
-- if you make a change to the bento-upgrade.service systemd unit, update process will be aborted after nixos-rebuild is successful, and no log will be reported. This is because the systemd unit is stopped to be updated.
+- ~~if you make a change to the bento-upgrade.service systemd unit, update process will be aborted after nixos-rebuild is successful, and no log will be reported. This is because the systemd unit is stopped to be updated.~~
 - if the sftp server is not reachable while a remote system updated (because it started before the main server got down or because of SELF UPDATE), it won't receive the log file and the system will be shown as "rebuild/sync pending"
 
 # TODO
