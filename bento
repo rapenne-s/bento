@@ -3,7 +3,7 @@
 # FUNCTION LIBRARIES
 usage() {                                                                                    
     cat <<EOF
-usage: bento init | deploy | build [test|switch] | status [delay]
+usage: bento init | deploy | build [test|switch] | status [delay] | flake-update
 
 bento init
 : create the layout for bento in the current directory
@@ -16,6 +16,9 @@ bento build [test|switch]
 
 bento status [delay]
 : display information for remote hosts
+
+bento flake-update
+: recursively update flakes lock files
 
 env NAME=someconfig bento deploy|build
 : only build / deploy the system "someconfig"
@@ -653,6 +656,22 @@ then
     then
         cp ../states.txt "${CHROOT_DIR}/states.txt"
     fi
+    exit 0
+fi
+
+# update flakes recursively
+if [ "$1" = "flake-update" ]
+then
+    cd hosts || exit 5
+
+    find . -type d | while read directory
+    do
+        if [ -f "$directory/flake.nix" ]
+        then
+            nix flake update path:"$directory"
+        fi
+    done
+
     exit 0
 fi
 
