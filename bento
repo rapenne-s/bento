@@ -31,6 +31,7 @@ check_bento() {
     then
         echo "ERROR"
         echo "$PWD isn't a bento compatible directory, you need a host directory and a config.sh file"
+        echo ""
         exit 6
     fi
 }
@@ -501,6 +502,27 @@ elapsed_time() {
 
 # CODE BEGINS HERE
 
+if [ -z "$1" ]
+then
+    usage
+fi
+
+if [ "$1" = "init" ]
+then
+    IS_BENTO=1
+    test -d hosts || IS_BENTO=0
+    test -f config.sh || IS_BENTO=0
+    if [ "${IS_BENTO}" -eq 0 ]
+    then
+        init
+    else
+        echo "it seems you are in a bento directory"
+    fi
+    exit 0
+fi
+
+# only continue if this is a bento compatible directory
+check_bento
 
 # load all hosts or the one defined in environment variable NAME
 # we need a lot of boilerplate to compare configuration in flakes
@@ -547,7 +569,6 @@ fi
 # can be used to test/switch the local machine
 if [ "$1" = "build" ]
 then
-    check_bento
     . ./config.sh
     cd hosts || exit 5
 
@@ -603,7 +624,6 @@ fi
 # populate the chroot with configuration files
 if [ "$1" = "deploy" ]
 then
-    check_bento
     . ./config.sh
     cd hosts || exit 5
 
@@ -639,7 +659,6 @@ fi
 # show the status of each host
 if [ "$1" = "status" ]
 then
-    check_bento
     . ./config.sh
     cd hosts || exit 5
 
@@ -654,20 +673,6 @@ then
         display_status
     fi
 
-    exit 0
-fi
-
-if [ "$1" = "init" ]
-then
-    IS_BENTO=1
-    test -d hosts || IS_BENTO=0
-    test -f config.sh || IS_BENTO=0
-    if [ "${IS_BENTO}" -eq 0 ]
-    then
-        init
-    else
-        echo "it seems you are in a bento directory"
-    fi
     exit 0
 fi
 
