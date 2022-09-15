@@ -79,6 +79,12 @@ Here is the typical directory layout for using **bento** for the non-flakes syst
     └── fleet.nix
 ```
 
+# Environment variables
+
+`bento` is using the following environment variables as configuration:
+- `BENTO_DIR`: contains the path of a bento directory, so you can run `bento` commands from anywhere
+- `NAME`: contains machine names (flake config or directory in `hosts/`) to restrict commands `deploy` and `build` to this machine only
+
 # Workflow
 
 1. make configuration changes per host in `hosts/` or a global include file in `utils` (you can rename it as you wish)

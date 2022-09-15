@@ -511,6 +511,11 @@ then
     usage
 fi
 
+if [ -n "${BENTO_DIR}}" ]
+then
+    cd "${BENTO_DIR}"
+fi
+
 if [ "$1" = "init" ]
 then
     IS_BENTO=1
