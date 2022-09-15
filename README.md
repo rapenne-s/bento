@@ -169,6 +169,13 @@ Example of output:
         x1        fcz1s2yp      fcz1s2yp 💚      up to date 💚                           (build 2m 37s)
 ```
 
+## Update all flakes
+
+With `bento flake-update` you can easily update your flakes recursively to the latest version.
+
+A parameter can be added to only update a given source with, i.e to update all nixpkgs in the flakes `bento flake-update nixpkgs`.
+
+
 # CAVEATS
 
 - if you propagate a new version while a host is updating, it may be incorrectly seen as "up to date" because the log file deposited will be newer than the `last_time_changed` file
