@@ -84,6 +84,7 @@ Here is the typical directory layout for using **bento** for the non-flakes syst
 `bento` is using the following environment variables as configuration:
 - `BENTO_DIR`: contains the path of a bento directory, so you can run `bento` commands from anywhere
 - `NAME`: contains machine names (flake config or directory in `hosts/`) to restrict commands `deploy` and `build` to this machine only
+- `VERBOSE`: if defined to anything, display `nixos-rebuild` output for local builds done with `bento build` or `bento deploy`
 
 # Workflow
 
@@ -108,6 +109,10 @@ This is useful if you want to let remote hosts to be autonomous and pick up new 
 Systems will be reported as "auto upgraded" in the `bento status` command if they rebuild after a local flake update.
 
 This adds at least 8 kB of inbound bandwidth for each input when checking for changes.
+
+# Auto reboot
+
+You can create a file named `REBOOT` in a host directory. When that host will rebuild the system, it will look at the new kernel, kernel modules and initrd, if they changed, a reboot will occur immediately after reporting a successful upgrade.  A kexec is used for UEFI systems for a faster reboot (this avoids BIOS and bootloader steps).
 
 # Examples
 
@@ -199,6 +204,8 @@ A parameter can be added to only update a given source with, i.e to update all n
 - DONE ~~upgrades could be triggered by the user by accessing a local socket, like opening a web page in a web browser to trigger it, if it returns output that'd be better~~
 - a way to tell a client (when using flakes) to try to update flakes every time even if no configuration changed, to keep them up to date
 - DONE ~~being able to use a single flakes with multiple hosts that **bento** will automatically assign to the nixosConfiguration names as hosts~~
+- DONE ~~handle automatic reboot if the kernel changed~~
+- automatic reboot should be scheduled if desired, this may require making bento a NixOS module to set a timer in it, if no timer then it would reboot immediately
 
 ## Minor
 

@@ -334,6 +334,18 @@ then
     else
         echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_success.log.gz" | sftp ${dest}@${REMOTE_IP}:
     fi
+
+    # handle auto reboot if kernel changed
+    if [ -f "REBOOT" ]
+    then
+        booted="\$(readlink /run/booted-system/{initrd,kernel,kernel-modules})"
+        built="\$(readlink /nix/var/nix/profiles/system/{initrd,kernel,kernel-modules})"
+
+        if [ ! "\${booted}" = "\${built}" ]
+        then
+            systemctl kexec || systemctl reboot
+        fi
+    fi
 else
     # check if we did a rollback
     if [ "\$SUCCESS" -eq 255 ]
@@ -374,6 +386,13 @@ build_config()
     TMPLOG="$(mktemp /tmp/bento-build-log.XXXXXXXXXXXX)"
     rsync -rltgoDL  "$SOURCES/" "$TMP/"
 
+    if [ -z "VERBOSE" ]
+    then
+        output="/dev/null"
+    else
+        output="/dev/stderr"
+    fi
+
     SECONDS=0
     cd "$TMP" || exit 5
 
@@ -385,9 +404,9 @@ build_config()
         test -d .git || git init >/dev/null 2>/dev/null
         git add . >/dev/null
 
-        $SUDO nixos-rebuild "${COMMAND}" --flake ".#${NAME}" 2>"${TMPLOG}" >"${TMPLOG}"
+        $SUDO nixos-rebuild "${COMMAND}" --flake ".#${NAME}" | tee "${output}" 2>"${TMPLOG}" >"${TMPLOG}"
     else
-        $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" 2>"${TMPLOG}" >"${TMPLOG}"
+        $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" | tee "${output}" 2>"${TMPLOG}" >"${TMPLOG}"
     fi
     if [ $? -eq 0 ]; then printf "success " ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat "${TMPLOG}" ; fi
     ELAPSED=$(elapsed_time $SECONDS)
