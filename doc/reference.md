@@ -1,3 +1,24 @@
+# Usage
+
+- `bento init`
+  - create the layout for bento in the current directory (only work from flakes)
+
+- `bento deploy`
+  - build configurations and deploy configuration files, requires to be root
+
+- `bento build [dry-run|build|test|switch]`
+  - dry-build or build configurations. Using `test` or `switch`, can be used to apply a configuration locally. Default is `build`.
+
+- `bento status [delay]`
+  - display information for remote hosts, if `delay` is set, loop infinitely to display the status every `delay` seconds. Default delay is `0` and doesn't loop.
+
+- `bento flake-update [input]`
+  - recursively update flakes lock files
+  - with [input] parameter it only update the input passed as parameter
+
+- `env NAME=someconfig bento deploy|build`
+  - only build / deploy the system "someconfig"
+
 # Environment variables
 
 `bento` is using the following environment variables as configuration:
@@ -26,3 +47,12 @@ As each host is sending a log upon rebuild to tell if it failed or succeeded, we
 Using `bento status` you can track the current state of each hosts (time since last update, current NixOS version, status report)
 
 [![asciicast](https://asciinema.org/a/520504.svg)](https://asciinema.org/a/520504)
+
+# Status list
+
+- **sync pending**: no configuration file changed, only files specific to **Bento** changed
+- **rebuild pending**: the local version has been updated and remote will need to run `nixos-rebuild`
+- **up to date**: no difference between the local configuration and what the remote system is running
+- **extra logs**: the update process has been run more than once, this shouldn't happen. The most common case is that the update service has been started again manually.
+- **failing**: the update process failed
+- **rollbacked**: the update process failed, but a rollback has been done to previous version. **Bento** won't try to update until a new configuration is available.

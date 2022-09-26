@@ -79,13 +79,7 @@ If you don't want to wait for the timer, you can ssh into the machine to run `sy
 Using `bento status`, you instantly get a report of your fleet, all information are extracted from the logs files deposited after each update:
 
 - what is the version they should have (built locally) against the version they are currently running
-- their state:
-  - **sync pending**: no configuration file changed, only files specific to **Bento**
-  - **rebuild pending**: the local version has been updated and the remote must run `nixos-rebuild`
-  - **up to date**: everything is fine
-  - **extra logs**: the update process has been run more than necessary, this shouldn't happen. The most common case is to run the update service manually.
-  - **failing**: the update process failed
-  - **rollbacked**: the update process failed and a rollback has been done to previous version. **Bento** won't try until a new configuration is available.
+- their current state
 - the time elapsed since last rebuild
 - the time elapsed since the new onfiguration has been made available
 
