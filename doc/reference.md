@@ -40,13 +40,28 @@ This adds at least 8 kB of inbound bandwidth for each input when checking for ch
 
 You can create a file named `REBOOT` in a host directory. When that host will rebuild the system, it will look at the new kernel, kernel modules and initrd, if they changed, a reboot will occur immediately after reporting a successful upgrade.  A kexec is used for UEFI systems for a faster reboot (this avoids BIOS and bootloader steps).
 
-# Track each host state
+# Status report of the fleet
 
-As each host is sending a log upon rebuild to tell if it failed or succeeded, we can use this file to check what happened since the sftp file `last_time_changed` was created.
+Use `bento status` to get a report of your fleet, all information are extracted from the logs files deposited after each update:
 
-Using `bento status` you can track the current state of each hosts (time since last update, current NixOS version, status report)
+- what is the version they should have (built locally) against the version they are currently running
+- their current state
+- the time elapsed since last rebuild
+- the time elapsed since the new onfiguration has been made available
 
-[![asciicast](https://asciinema.org/a/520504.svg)](https://asciinema.org/a/520504)
+Non-flakes systems aren't reproducible (without efforts), so we can't compare the remote version with the local one, but we can report this information.
+
+Example of output:
+
+```
+   machine   local version   remote version              state                                     time
+   -------       ---------      -----------      -------------                                     ----
+  interbus      non-flakes      1dyc4lgr 📌      up to date 💚                              (build 11s)
+  kikimora        996vw3r6      996vw3r6 💚    sync pending 🚩       (build 5m 53s) (new config 2m 48s)
+       nas        r7ips2c6      lvbajpc5 🛑 rebuild pending 🚩       (build 5m 49s) (new config 1m 45s)
+      t470        b2ovrtjy      ih7vxijm 🛑      rollbacked 🔃                           (build 2m 24s)
+        x1        fcz1s2yp      fcz1s2yp 💚      up to date 💚                           (build 2m 37s)
+```
 
 # Status list
 
