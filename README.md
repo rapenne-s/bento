@@ -76,6 +76,7 @@ There is a diagram showing the design pattern of **bento**:
 - document config.sh in the reference
 - figure out how to make a tutorial for bento
 - sftp timeout should be configurable in `config.sh`
+- `config.sh` should have variables for the local / remote / both `nixos-rebuild` parameters (useful for `--fallback`)
 
 ## Minor
 
