@@ -75,7 +75,7 @@ There is a diagram showing the design pattern of **bento**:
 - automatic reboot should be scheduled if desired, this may require making bento a NixOS module to set a timer in it, if no timer then it would reboot immediately
 - document config.sh in the reference
 - figure out how to make a tutorial for bento
-- sftp timeout should be configurable in `config.sh`
+- DONE ~~sftp timeout should be configurable in `config.sh`~~
 - `config.sh` should have variables for the local / remote / both `nixos-rebuild` parameters (useful for `--fallback`)
 
 ## Minor

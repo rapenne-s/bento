@@ -19,6 +19,14 @@
 - `env NAME=someconfig bento deploy|build`
   - only build / deploy the system "someconfig"
 
+# Configuration file
+
+A local file `config.sh` is required for Bento, it contains variable used to generate the scripts:
+
+- `CHROOT_DIR`: the directory in which the SFTP server will be configured to serve files from
+- `REMOTE_IP`: the IP address or hostname used by SFTP client to reach the server with the configuration files
+- `TIMEOUT`: time in seconds to wait until aborting when connecting to the SFTP server. Default value is `20` seconds.
+
 # Environment variables
 
 `bento` is using the following environment variables as configuration:

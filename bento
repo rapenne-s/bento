@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+TIMEOUT=20
+
 # FUNCTION LIBRARIES
 usage() {                                                                                    
     cat <<EOF
@@ -197,7 +199,7 @@ touch .state
 ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan "${REMOTE_IP}" >> /root/.ssh/known_hosts
 
 STATEFILE="\$(mktemp /tmp/bento-state.XXXXXXXXXXXXXXXX)"
-echo "ls -l last_change_date" | sftp -oConnectTimeout=20 ${dest}@${REMOTE_IP} >"\${STATEFILE}"
+echo "ls -l last_change_date" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP} >"\${STATEFILE}"
 
 if [ "\$?" -ne 0 ]
 then
@@ -227,7 +229,7 @@ then
     fi
 else
     echo "update required"
-    sftp -oConnectTimeout=20 ${dest}@${REMOTE_IP}:/config/bootstrap.sh .
+    sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP}:/config/bootstrap.sh .
     /bin/sh bootstrap.sh
     echo "\${STATE}" > "/var/bento/.state"
 fi
@@ -252,7 +254,7 @@ then
     find . -maxdepth 1 -type d -exec rm -fr {} \;
     find . -maxdepth 1 -type f -not -name .state -and -not -name update.sh -and -not -name bootstrap.sh -exec rm {} \;
 
-    printf "%s\n" "cd config" "get -R ." | sftp -oConnectTimeout=20 -r ${dest}@${REMOTE_IP}:
+    printf "%s\n" "cd config" "get -R ." | sftp -oConnectTimeout="${TIMEOUT}" -r ${dest}@${REMOTE_IP}:
 
     # required by flakes
     test -d .git || git init
@@ -317,7 +319,7 @@ fi
 
 # rollback if something is wrong
 # we test connection to the sftp server
-echo "ls -l last_change_date" | sftp -oConnectTimeout=20 ${dest}@${REMOTE_IP} >"\${LOGFILE}"
+echo "ls -l last_change_date" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP} >"\${LOGFILE}"
 if [ "\$?" -ne 0 ];
 then
     nixos-rebuild --rollback switch
@@ -330,9 +332,9 @@ if [ "\$SUCCESS" -eq 0 ]
 then
     if [ "\$autoupdate" -eq 1 ]
     then
-        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_autoupdate.log.gz" | sftp -oConnectTimeout=20 ${dest}@${REMOTE_IP}:
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_autoupdate.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP}:
     else
-        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_success.log.gz" | sftp -oConnectTimeout=20 ${dest}@${REMOTE_IP}:
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_success.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP}:
     fi
 
     # handle auto reboot if kernel changed
@@ -350,9 +352,9 @@ else
     # check if we did a rollback
     if [ "\$SUCCESS" -eq 255 ]
     then
-        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_rollback.log.gz" | sftp -oConnectTimeout=20 ${dest}@${REMOTE_IP}:
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_rollback.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP}:
     else
-        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_failure.log.gz" | sftp -oConnectTimeout=20 ${dest}@${REMOTE_IP}:
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_failure.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP}:
     fi
 fi
 rm "\${LOGFILE}.gz"

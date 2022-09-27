@@ -1,2 +1,8 @@
 CHROOT_DIR=/home/chroot
 REMOTE_IP=myserver.example
+
+# Optional
+
+# maxium time waiting for the SFTP connection to connect
+# default value is 20
+#TIMEOUT=20
