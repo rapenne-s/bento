@@ -52,7 +52,6 @@ version_diff() {
     do
         test -d "${i}" || continue
 
-        # date calculation
         LASTLOG=$(find "${i}/logs/" -type f | sort -n | tail -n 1)
         LASTLOGVERSION="$(basename "$LASTLOG" | awk -F '_' '{ print $2 }' )"
         EXPECTED_CONFIG="$(awk -F '=' -v host="${i}" 'host == $1 { print $2 }' states.txt)"
