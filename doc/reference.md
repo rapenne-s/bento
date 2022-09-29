@@ -4,7 +4,10 @@
   - create the layout for bento in the current directory (only work from flakes)
 
 - `bento deploy`
-  - build configurations and deploy configuration files, requires to be root
+  - build configurations and deploy configuration files, requires to be root.
+
+- `bento diff`
+  - display the difference between each remote system version and their new version. Supports `NAME` environment variable.
 
 - `bento build [dry-run|build|test|switch]`
   - dry-build or build configurations. Using `test` or `switch`, can be used to apply a configuration locally. Default is `build`.
@@ -31,7 +34,7 @@ A local file `config.sh` is required for Bento, it contains variable used to gen
 
 `bento` is using the following environment variables as configuration:
 - `BENTO_DIR`: contains the path of a bento directory, so you can run `bento` commands from anywhere
-- `NAME`: contains machine names (flake config or directory in `hosts/`) to restrict commands `deploy` and `build` to this machine only
+- `NAME`: contains machine names (flake config or directory in `hosts/`) to restrict commands `deploy`, `diff` and `build` to this machine only
 - `VERBOSE`: if defined to anything, display `nixos-rebuild` output for local builds done with `bento build` or `bento deploy`
 
 # Self update mode

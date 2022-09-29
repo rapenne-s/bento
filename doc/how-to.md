@@ -87,3 +87,31 @@ Using `bento status` you can track the current state of each hosts (time since l
 With `bento flake-update` you can easily update your flakes recursively to the latest version.
 
 A parameter can be added to only update a given source with, i.e to update all nixpkgs in the flakes `bento flake-update nixpkgs`.
+
+# Show differences between a running system version and its new version
+
+With `env NAME=my-laptop bento diff` you can display the differences of packages between what `my-laptop` is running and its new version.
+
+The output should look like this:
+
+```
+Changes in x1 between p50qql7f42rl0fccdwxw45k21pnqb9ii-nixos-system-x1-22.11.20220921.d6490a0 and 7zfxxddmg8l6qc6bksar5gm62ylwsdv5-nixos-system-x1-22.11.20220927.7e52b35
+bind: 9.18.6 → 9.18.7
+cpupower: 5.19.9, 5.19.9_fish → 5.19.11, 5.19.11_fish
+gh: 2.15.0, 2.15.0_fish → 2.16.1, 2.16.1_fish
+imagemagick: 7.1.0-48 → 7.1.0-49, +18.0 KiB
+initrd-linux: 5.19.9 → 5.19.11
+libblockdev: 2.26 → 2.28
+libbytesize: 2.6 → 2.7
+libdmtx: 0.7.5 → 0.7.7
+linux: 5.19.9, 5.19.9-modules → 5.19.11, 5.19.11-modules, +126.6 KiB
+man: -11.8 KiB
+nixos: +12.5 KiB
+nixos-system-x1: 22.11.20220921.d6490a0 → 22.11.20220927.7e52b35
+opencv: 4.5.4 → 4.6.0, +1901.6 KiB
+plasma-workspace: +62.4 KiB
+root-authorized_keys: ∅ → ε
+source: +701.9 KiB
+systemsettings: +62.6 KiB
+-------------
+```
