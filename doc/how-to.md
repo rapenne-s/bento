@@ -57,7 +57,7 @@ Here are the steps to add a server named `kikimora` to bento:
 1. generate a ssh-key on `kikimora` for root user
 2. add kikimora's public key to bento `fleet.nix` file
 3. reconfigure the ssh host to allow kikimora's key (it should include the `fleet.nix` file)
-4. copy kikimora's config (usually `/etc/nixos/` in bento `hosts/kikimora/` directory
+4. copy kikimora's config (usually `/etc/nixos/`) in bento `hosts/kikimora/` directory
 5. add utils/bento.nix to its config (in `hosts/kikimora` run `ln -s ../../utils .` and add `./utils/bento.nix` in `imports` list)
 6. check kikimora's config locally with `bento build dry-build`, you can check only `kikimora` with `env NAME=kikimora bento build dry-build`
 7. populate the chroot with `sudo bento deploy` to copy the files in `/home/chroot/kikimora/config/`
