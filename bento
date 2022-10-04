@@ -514,7 +514,7 @@ deploy_files() {
         # only distribute changes if they changed
         # this avoids bumping the time and trigger a rebuild for nothing
 
-        diff -r "${STAGING_DIR}/${dest}/config/" "${CHROOT_DIR}/${dest}/config/" >/dev/null
+        diff -r "${STAGING_DIR}/${dest}/config/" "${CHROOT_DIR}/${dest}/config/" >/dev/null 2>/dev/null
         CHANGES=$?
 
         if [ "$CHANGES" -ne 0 ]
