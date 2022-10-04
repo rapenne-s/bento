@@ -115,3 +115,17 @@ source: +701.9 KiB
 systemsettings: +62.6 KiB
 -------------
 ```
+
+# Push a configuration to a remote system
+
+It's possible to use `bento` in a *push* model using `TARGET_IP`:
+
+```
+env TARGET_IP=10.43.43.1 NAME=myserver bento build switch
+```
+
+If the remote system is using a non-standard port, you need to define the according ssh option with `NIX_SSHOPTS`:
+
+```
+env NIX_SSHOPTS="-p2222" TARGET_IP=10.43.43.1 NAME=laptop bento build switch
+```

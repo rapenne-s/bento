@@ -419,6 +419,12 @@ build_config()
     TMPLOG="$(mktemp /tmp/bento-build-log.XXXXXXXXXXXX)"
     rsync -rltgoDL  "$SOURCES/" "$TMP/"
 
+    PARAMS=""
+    if [ -n "$TARGET_IP" ]
+    then
+        PARAMS="--use-remote-sudo --target-host $TARGET_IP"
+    fi
+
     if [ -z "VERBOSE" ]
     then
         output="/dev/null"
@@ -437,9 +443,9 @@ build_config()
         test -d .git || git init >/dev/null 2>/dev/null
         git add . >/dev/null
 
-        $SUDO nixos-rebuild "${COMMAND}" --flake ".#${NAME}" | tee "${output}" 2>"${TMPLOG}" >"${TMPLOG}"
+        $SUDO env NIX_SSHOPTS=$NIX_SSHOPTS nixos-rebuild ${PARAMS} "${COMMAND}" --flake ".#${NAME}" | tee "${output}" 2>"${TMPLOG}" >"${TMPLOG}"
     else
-        $SUDO nixos-rebuild "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" | tee "${output}" 2>"${TMPLOG}" >"${TMPLOG}"
+        $SUDO env NIX_SSHOPTS=$NIX_SSHOPTS nixos-rebuild ${PARAMS} "${COMMAND}" --no-flake -I nixos-config="$TMP/configuration.nix" | tee "${output}" 2>"${TMPLOG}" >"${TMPLOG}"
     fi
     if [ $? -eq 0 ]; then printf "success " ; else printf "failure " ; BAD_HOSTS="${NAME} ${BAD_HOSTS}" ; SUCCESS=$(( SUCCESS + 1 )) ; cat "${TMPLOG}" ; fi
     ELAPSED=$(elapsed_time $SECONDS)
@@ -673,10 +679,24 @@ then
                 test -n "${SINGLE_FLAKE}" && ! [ "$host" = "${SINGLE_FLAKE}" ] && continue
                 printf "%${PRETTY_OUT_COLUMN}s " "${host}"
                 build_config "$i" "$COMMAND" "$SUDO" "$host"
+
+                # if build succeeded and we used TARGET_IP
+                # populate the sftp directory with the new version
+                if [ "$?" -eq 0 ] && [ -n "$TARGET_IP" ]
+                then
+                    deploy_files "$i" "${host}" "${host}"
+                fi
             done
         else
             printf "%${PRETTY_OUT_COLUMN}s " "${i}"
             build_config "$i" "$COMMAND" "$SUDO" "$i"
+
+            # if build succeeded and we used TARGET_IP
+            # populate the sftp directory with the new version
+            if [ "$?" -eq 0 ] && [ -n "$TARGET_IP" ]
+            then
+                deploy_files "$i" "$i"
+            fi
         fi
     done
     exit 0

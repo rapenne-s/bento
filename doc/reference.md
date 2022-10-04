@@ -11,6 +11,7 @@
 
 - `bento build [dry-run|build|test|switch]`
   - dry-build or build configurations. Using `test` or `switch`, can be used to apply a configuration locally. Default is `build`.
+  - when using `TARGET_IP`, the command is run on a remote server
 
 - `bento status [delay]`
   - display information for remote hosts, if `delay` is set, loop infinitely to display the status every `delay` seconds. Default delay is `0` and doesn't loop.
@@ -36,6 +37,8 @@ A local file `config.sh` is required for Bento, it contains variable used to gen
 - `BENTO_DIR`: contains the path of a bento directory, so you can run `bento` commands from anywhere
 - `NAME`: contains machine names (flake config or directory in `hosts/`) to restrict commands `deploy`, `diff` and `build` to this machine only
 - `VERBOSE`: if defined to anything, display `nixos-rebuild` output for local builds done with `bento build` or `bento deploy`
+- `TARGET_IP`: can be used to push a configuration closure to a remote system, it's wrapping `nixos-rebuild`. Only work with `bento build [switch|test]`.
+- `NIX_SSHOPTS`: parameters for ssh to be used when `TARGET_IP` is used. Example: `NIX_SSHOPTS=-p2222` to use port 2222 instead of the standard port 22.
 
 # Self update mode
 
