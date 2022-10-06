@@ -64,24 +64,16 @@ There is a diagram showing the design pattern of **bento**:
 
 ## Major priority
 
-- DONE ~~client should report their current version after an upgrade, we should be able to compute the same value from the config on the server side, this would allow to check if a client is correctly up to date~~
 - being able to create a podman compatible NixOS image that would be used as the chroot server, to avoid reconfiguring the host and use sudo to distribute files
-- DONE ~~auto rollback like "magicrollback" by deploy-rs in case of losing connectivity after an upgrade~~
-- DONE ~~`local_build.sh` and `populate_chroot` should be only one command installed in `$PATH`~~
-- DONE ~~upgrades could be triggered by the user by accessing a local socket, like opening a web page in a web browser to trigger it, if it returns output that'd be better~~
 - a way to tell a client (when using flakes) to try to update flakes every time even if no configuration changed, to keep them up to date
-- DONE ~~being able to use a single flakes with multiple hosts that **bento** will automatically assign to the nixosConfiguration names as hosts~~
-- DONE ~~handle automatic reboot if the kernel changed~~
 - automatic reboot should be scheduled if desired, this may require making bento a NixOS module to set a timer in it, if no timer then it would reboot immediately
 - document config.sh in the reference
 - figure out how to make a tutorial for bento
-- DONE ~~sftp timeout should be configurable in `config.sh`~~
 - `config.sh` should have variables for the local / remote / both `nixos-rebuild` parameters (useful for `--fallback`)
 
 ## Minor
 
 - a systray info widget could tell the user an upgrade has been done
-- DONE ~~updates should add a log file in the sftp chroot if successful or not~~
 - the sftp server could be on another server than the one with the configuration files
 - provide more useful modules in the utility nix file (automatically use the host as a binary cache for instance)
 - have a local information how to ssh to the client to ease the rebuild trigger (like a SSH file containing ssh command line)
