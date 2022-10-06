@@ -12,6 +12,10 @@
         name = "bento";
         src = self;
 
+        patchPhase = ''
+            substituteInPlace bento --replace 'inotifywait' "${pkgs.inotify-tools}/bin/inotifywait";
+        '';
+
         installPhase = ''
           mkdir -p $out/bin
           mkdir -p $out/share

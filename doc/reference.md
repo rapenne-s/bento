@@ -13,8 +13,10 @@
   - dry-build or build configurations. Using `test` or `switch`, can be used to apply a configuration locally. Default is `build`.
   - when using `TARGET_IP`, the command is run on a remote server
 
-- `bento status [delay]`
-  - display information for remote hosts, if `delay` is set, loop infinitely to display the status every `delay` seconds. Default delay is `0` and doesn't loop.
+- `bento status`
+  - display information for remote hosts
+  - if the command is run in interactive mode, `bento` will run in an inifite loop the status display and wait for a change in the chroot directory
+  - if the command isn't run in interactive mode, the status is only displayed once and `bento` exits
 
 - `bento flake-update [input]`
   - recursively update flakes lock files

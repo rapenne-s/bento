@@ -78,7 +78,9 @@ If you don't want to wait for the timer, you can ssh into the machine to run `sy
 
 As each host is sending a log upon rebuild to tell if it failed or succeeded, the files are used to check what happened since the sftp file `last_time_changed` was created.
 
-Using `bento status` you can track the current state of each hosts (time since last update, current NixOS version, status report)
+Using `bento status` you can track the current state of each hosts (time since last update, current NixOS version, status report).
+
+Bento will display the current state of the fleet, and wait for a change in the chroot directory to display the status again.
 
 [![asciicast](https://asciinema.org/a/520504.svg)](https://asciinema.org/a/520504)
 

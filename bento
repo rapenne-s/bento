@@ -5,7 +5,7 @@ TIMEOUT=20
 # FUNCTION LIBRARIES
 usage() {                                                                                    
     cat <<EOF
-usage: bento init | deploy | diff | build [dry-run|test|switch] | status [delay] | flake-update [input]
+usage: bento init | deploy | diff | build [dry-run|test|switch] | status | flake-update [input]
 
 bento init
 : create the layout for bento in the current directory
@@ -19,8 +19,10 @@ bento diff
 bento build [dry-run|test|switch]
 : build configurations, can activate (test or switch) a build locally
 
-bento status [delay]
+bento status
 : display information for remote hosts
+: if the script isn't run in an interactive terminal, exit after display
+: in an interactive terminal, display status and poll for changes to display again
 
 bento flake-update [input]
 : recursively update flakes lock files
@@ -768,12 +770,14 @@ then
     . ./config.sh
     cd hosts || exit 5
 
-    if [ -n "$2" ]
+    # if stdout is interactive
+    # wait for changes and loop
+    if [ -t 1 ]
     then
         while true
         do
             display_status
-            sleep "$2"
+            inotifywait -q -e 'modify,create' "${CHROOT_DIR}/states.txt" "${CHROOT_DIR}"/*/logs/ >/dev/null 2>/dev/null
         done
     else
         display_status
