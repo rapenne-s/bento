@@ -37,6 +37,8 @@ This setup need a machine to be online most of the time.  NixOS systems (clients
 
 **Bento** doesn't necesserarily require a public IP, don't worry, you can use tor hidden service, i2p tunnels, a VPN or whatever floats your boat given it permit to connect to ssh.
 
+**Bento** will use `nvd` instead of `nix store diff-closures` if it's available in the `$PATH`.
+
 # How it works
 
 The ssh server is containing all the configuration files for the machines. When you make a change, run `bento` to rebuild systems and copy all the configuration files to a new directory used by each client as a sftp chroot, each client regularly poll for changes in their dedicated sftp directory and if it changed, they download all the configuration files and run nixos-rebuild. It automatically detects if the configuration is using flakes or not.
