@@ -561,10 +561,12 @@ elapsed_time() {
 
     SEC=$RAW
 
-    if [ "$DAYS" -ne 0 ]; then DURATION="${DAYS}d " ; fi
-    if [ "$HOURS" -ne 0 ]; then DURATION="${DURATION}${HOURS}h " ; fi
-    if [ "$MINUTES" -ne 0 ]; then DURATION="${DURATION}${MINUTES}m " ; fi
-    if [ "$SEC" -ne 0 ]; then DURATION="${DURATION}${SEC}s" ; fi
+    ELEMENTS=0
+
+    if [ "$DAYS" -ne 0 ]; then DURATION="${DAYS}d " ; ELEMENTS=$(( ELEMENTS + 1 )) ; fi
+    if [ "$HOURS" -ne 0 ]; then DURATION="${DURATION}${HOURS}h " ; ELEMENTS=$(( ELEMENTS + 1 )) ; fi
+    if [ "$ELEMENTS" -lt 2 ] && [ "$MINUTES" -ne 0 ]; then DURATION="${DURATION}${MINUTES}m " ; ELEMENTS=$(( ELEMENTS + 1 )) ; fi
+    if [ "$ELEMENTS" -lt 2 ] && [ "$SEC" -ne 0 ]; then DURATION="${DURATION}${SEC}s" ; fi
 
     if [ -z "$DURATION" ]; then DURATION="0s" ; fi
 
