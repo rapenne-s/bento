@@ -738,13 +738,17 @@ then
             deploy_files "$i" "$i"
         fi
 
+        # the states files is used for the status function
+        # we need to update it after each rebuild so if a
+        # system updates while other configurations are building
+        # the status will be correct
+        if [ -f ../states.txt ]
+        then
+            cp ../states.txt "${CHROOT_DIR}/states.txt"
+        fi
+
     done
 
-    # the states files is used for the status function
-    if [ -f ../states.txt ]
-    then
-        cp ../states.txt "${CHROOT_DIR}/states.txt"
-    fi
     exit 0
 fi
 
