@@ -35,7 +35,7 @@ Bento has a different approach with a "pull" model:
 
 This setup need a machine to be online most of the time.  NixOS systems (clients) will regularly check for updates on this machine over ssh.
 
-**Bentoo** doesn't necesserarily require a public IP, don't worry, you can use tor hidden service, i2p tunnels, a VPN or whatever floats your boat given it permit to connect to ssh.
+**Bento** doesn't necesserarily require a public IP, don't worry, you can use tor hidden service, i2p tunnels, a VPN or whatever floats your boat given it permit to connect to ssh.
 
 # How it works
 
