@@ -236,14 +236,14 @@ cd /var/bento || exit 5
 touch .state
 
 # don't get stuck if we change the host
-ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan "${REMOTE_IP}" >> /root/.ssh/known_hosts
+ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan -p "${REMOTE_PORT}" "${REMOTE_IP}" >> /root/.ssh/known_hosts
 
 STATEFILE="\$(mktemp /tmp/bento-state.XXXXXXXXXXXXXXXX)"
-echo "ls -l last_change_date" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP} >"\${STATEFILE}"
+echo "ls -l last_change_date" | sftp -oConnectTimeout="${TIMEOUT}" -P "${REMOTE_PORT}" ${dest}@${REMOTE_IP} >"\${STATEFILE}"
 
 if [ "\$?" -ne 0 ]
 then
-    echo "There is certainly a network problem with ${REMOTE_IP}"
+    echo "There is certainly a network problem with ${REMOTE_IP} on port ${REMOTE_PORT}"
     echo "Aborting"
     rm "\${STATEFILE}"
     exit 1
@@ -269,7 +269,7 @@ then
     fi
 else
     echo "update required"
-    sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP}:/config/bootstrap.sh .
+    sftp -oConnectTimeout="${TIMEOUT}" -P "${REMOTE_PORT}" ${dest}@${REMOTE_IP}:/config/bootstrap.sh .
     /bin/sh bootstrap.sh
     echo "\${STATE}" > "/var/bento/.state"
 fi
@@ -282,7 +282,7 @@ EOF
 #!/bin/sh
 
 # accept the remote ssh fingerprint if not already known
-ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan "${REMOTE_IP}" >> /root/.ssh/known_hosts
+ssh-keygen -F "${REMOTE_IP}" >/dev/null || ssh-keyscan -p "${REMOTE_PORT}" "${REMOTE_IP}" >> /root/.ssh/known_hosts
 
 install -d -o root -g root -m 700 /var/bento
 cd /var/bento || exit 5
@@ -294,7 +294,7 @@ then
     find . -maxdepth 1 -type d -exec rm -fr {} \;
     find . -maxdepth 1 -type f -not -name .state -and -not -name update.sh -and -not -name bootstrap.sh -exec rm {} \;
 
-    printf "%s\n" "cd config" "get -R ." | sftp -oConnectTimeout="${TIMEOUT}" -r ${dest}@${REMOTE_IP}:
+    printf "%s\n" "cd config" "get -R ." | sftp -oConnectTimeout="${TIMEOUT}" -P "${REMOTE_PORT}" -r ${dest}@${REMOTE_IP}:
 
     # required by flakes
     test -d .git || git init
@@ -359,7 +359,7 @@ fi
 
 # rollback if something is wrong
 # we test connection to the sftp server
-echo "ls -l last_change_date" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP} >"\${LOGFILE}"
+echo "ls -l last_change_date" | sftp -oConnectTimeout="${TIMEOUT}" -P "${REMOTE_PORT}" ${dest}@${REMOTE_IP} >"\${LOGFILE}"
 if [ "\$?" -ne 0 ];
 then
     nixos-rebuild --rollback switch
@@ -372,9 +372,9 @@ if [ "\$SUCCESS" -eq 0 ]
 then
     if [ "\$autoupdate" -eq 1 ]
     then
-        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_autoupdate.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP}:
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_autoupdate.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" -P "${REMOTE_PORT}" ${dest}@${REMOTE_IP}:
     else
-        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_success.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP}:
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_success.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" -P "${REMOTE_PORT}" ${dest}@${REMOTE_IP}:
     fi
 
     # handle auto reboot if kernel changed
@@ -392,9 +392,9 @@ else
     # check if we did a rollback
     if [ "\$SUCCESS" -eq 255 ]
     then
-        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_rollback.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP}:
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_rollback.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" -P "${REMOTE_PORT}" ${dest}@${REMOTE_IP}:
     else
-        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_failure.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" ${dest}@${REMOTE_IP}:
+        echo "put \${LOGFILE}.gz /logs/\$(date +%Y%m%d-%H%M)_\${OSVERSION}_failure.log.gz" | sftp -oConnectTimeout="${TIMEOUT}" -P "${REMOTE_PORT}" ${dest}@${REMOTE_IP}:
     fi
 fi
 rm "\${LOGFILE}.gz"

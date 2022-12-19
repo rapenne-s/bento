@@ -1,5 +1,6 @@
 CHROOT_DIR=/home/chroot
 REMOTE_IP=myserver.example
+REMOTE_PORT=22
 
 # Optional
 
