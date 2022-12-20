@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 TIMEOUT=20
+REMOTE_PORT=22
 
 # FUNCTION LIBRARIES
 usage() {                                                                                    
