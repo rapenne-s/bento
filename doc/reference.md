@@ -31,6 +31,7 @@ A local file `config.sh` is required for Bento, it contains variable used to gen
 
 - `CHROOT_DIR`: the directory in which the SFTP server will be configured to serve files from
 - `REMOTE_IP`: the IP address or hostname used by SFTP client to reach the server with the configuration files
+- `REMOTE_PORT`: the port of the IP address or hostname used by SFTP client to reach the server with the configuration files. Defaults to 22.
 - `TIMEOUT`: time in seconds to wait until aborting when connecting to the SFTP server. Default value is `20` seconds.
 
 # Environment variables
