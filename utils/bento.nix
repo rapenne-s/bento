@@ -7,7 +7,7 @@
 in {
   systemd.services.bento-upgrade = {
     enable = true;
-    startAt = "${timer}";
+    startAt = lib.mkDefault "${timer}";
     path = with pkgs; [openssh git nixos-rebuild nix gzip];
     serviceConfig.Type = "oneshot";
     script = ''
