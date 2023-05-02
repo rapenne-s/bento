@@ -2,6 +2,7 @@
 
 TIMEOUT=20
 REMOTE_PORT=22
+NOLOCALBUILD=0
 
 # FUNCTION LIBRARIES
 usage() {                                                                                    
@@ -529,7 +530,11 @@ deploy_files() {
 
         if [ "$CHANGES" -ne 0 ]
         then
-            build_config "${STAGING_DIR}/${dest}/config/" "build" "" "${dest}"
+            if [ $NOLOCALBUILD -eq 1 ]; then
+              build_config "${STAGING_DIR}/${dest}/config/" "dry-build" "" "${dest}"
+            else
+              build_config "${STAGING_DIR}/${dest}/config/" "build" "" "${dest}"
+            fi
             echo " update required"
             # copy files in the chroot
             install -d -o root -g sftp_users -m 755 "${CHROOT_DIR}"
