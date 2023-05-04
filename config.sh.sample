@@ -9,3 +9,5 @@ REMOTE_IP=myserver.example
 # port to connect to the remote server
 # default is 22
 #REMOTE_PORT=22
+# don't build locally
+#NOLOCALBUILD=1
