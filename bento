@@ -629,7 +629,7 @@ else
     MATCH=$(echo "$FLAKES" | awk -v name="${NAME}" 'BEGIN { sum = 0 } name == $1 { sum=sum+1 } END { print sum }')
     if [ "$MATCH" -ne 1 ]
     then
-        echo "Found ${MATCH} system with this name"
+        echo "Found ${MATCH} systems with this name"
         exit 2
     else
         for flakes in $(find . -name flake.nix)
