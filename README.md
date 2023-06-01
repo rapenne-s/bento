@@ -27,7 +27,7 @@ Bento has a different approach with a "pull" model:
 - organized 💼: system administrators have all configurations files in one repository to ease management
 - peace of mind 🧘🏿: configurations can be validated locally by system administrators
 - smart 💡: secrets (arbitrary files) can (soon) be deployed without storing them in the nix store
-- robustness in mind 🦾: clients ony need to connect to a remote ssh server, there are many ways to bypass firewalls (corkscrew, VPN, Tor hidden service, I2P, ...)
+- robustness in mind 🦾: clients only need to connect to a remote ssh server, there are many ways to bypass firewalls (corkscrew, VPN, Tor hidden service, I2P, ...)
 - extensible 🧰 🪡: you can change every component, if you prefer using GitHub repositories to fetch configuration files instead of a remote sftp server, you can change it
 - for all NixOS 💻🏭📱: it can be used for anything running NixOS: remote workstations, smartphones or servers in a datacenter
 
