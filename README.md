@@ -66,9 +66,8 @@ There is a diagram showing the design pattern of **bento**:
 
 ## Major priority
 
-- being able to create a podman compatible NixOS image that would be used as the chroot server, to avoid reconfiguring the host and use sudo to distribute files
-- a way to tell a client (when using flakes) to try to update flakes every time even if no configuration changed, to keep them up to date
-- automatic reboot should be scheduled if desired, this may require making bento a NixOS module to set a timer in it, if no timer then it would reboot immediately
+- being able to create a NixOS rootless container that would be used as the chroot server, to avoid reconfiguring the host and use sudo to distribute files
+- a way to allow remote client to update their flakes lock file every time even if no configuration changed, this would be useful to let them stay up to date
 - document config.sh in the reference
 - figure out how to make a tutorial for bento
 - `config.sh` should have variables for the local / remote / both `nixos-rebuild` parameters (useful for `--fallback`)
