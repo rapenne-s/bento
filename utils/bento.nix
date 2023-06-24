@@ -17,6 +17,24 @@ in {
     restartIfChanged = false;
   };
 
+  systemd.services.bento-reboot = {
+    # this is disabled by default
+    # to avoid wrong expectations from users
+    enable = false;
+    startAt = "04:00";
+    path = with pkgs; [coreutils systemd];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      booted="$(readlink /run/booted-system/{initrd,kernel,kernel-modules})"
+      built="$(readlink /nix/var/nix/profiles/system/{initrd,kernel,kernel-modules})"
+      if [ ! "$booted" = "$built" ]
+      then
+          systemctl kexec || systemctl reboot
+      fi
+    '';
+  };
+
+
   systemd.sockets.listen-update = {
     enable = true;
     wantedBy = ["sockets.target"];

@@ -55,7 +55,9 @@ This adds at least 8 kB of inbound bandwidth for each input when checking for ch
 
 # Auto reboot
 
-You can create a file named `REBOOT` in a host directory. When that host will rebuild the system, it will look at the new kernel, kernel modules and initrd, if they changed, a reboot will occur immediately after reporting a successful upgrade.  A kexec is used for UEFI systems for a faster reboot (this avoids BIOS and bootloader steps).
+You can create a file named `REBOOT` in a host directory.  When that host will rebuild the system, it will look at the new kernel, kernel modules and initrd, if they changed, a reboot will occur immediately after reporting a successful upgrade.  A kexec is used for UEFI systems for a faster reboot (this avoids BIOS and bootloader steps).
+
+Independently of the `REBOOT` file, in the provided `utils/bento.nix`, there is a systemd service that can be enabled to automatically reboot at a given systemd calendar if the kernel/mdoules/initrd changed.  This is more convenient for servers.
 
 # Status report of the fleet
 
