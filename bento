@@ -472,6 +472,20 @@ build_config()
         sed -i "/^${NAME}/d" "$OLDPWD/../states.txt" >/dev/null
         echo "${NAME}=${VERSION}" >> "$OLDPWD/../states.txt"
     fi
+    if [ -f "flake.nix" ] && [ "${COMMAND}" = "dry-build" ]
+    then
+        # dry-build doesn't create a result link
+        # redirect stderr of nixos-rebuild and grep for system config
+        # this should be a fast and inexpensive operation, so we can run it again here
+        VERSION="$($SUDO nixos-rebuild dry-build --flake ".#${NAME}" 2>&1 >/dev/null | grep "nixos-system-${NAME}" | tr -d '\n' | sed 's,/nix/store/,,' | sed 's,.drv,,')"
+        if [ ! -z "VERSION" ]
+        then
+            touch "${OLDPWD}/../states.txt"
+            printf " %s" "${VERSION}"
+            sed -i "/^${NAME}/d" "$OLDPWD/../states.txt" >/dev/null
+            echo "${NAME}=${VERSION}" >> "$OLDPWD/../states.txt"
+        fi
+    fi
     echo ""
 
     cd - >/dev/null || exit 5
