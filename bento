@@ -629,7 +629,7 @@ FLAKES=$(
 for flakes in $(find . -name flake.nix)
 do
     TARGET="$(dirname "${flakes}")"
-    nix flake show --json "./$TARGET" | jq -r '.nixosConfigurations | keys[]'
+    nix flake show --json --option allow-import-from-derivation true "./$TARGET" | jq -r '.nixosConfigurations | keys[]'
 done
 )
 
@@ -649,7 +649,7 @@ else
         for flakes in $(find . -name flake.nix)
         do
             TARGET="$(dirname $flakes)"
-            FLAKES_IN_DIR=$(nix flake show --json "./$TARGET" | jq -r '.nixosConfigurations | keys[]')
+            FLAKES_IN_DIR=$(nix flake show --json --option allow-import-from-derivation true "./$TARGET" | jq -r '.nixosConfigurations | keys[]')
             if echo "${FLAKES_IN_DIR}" | grep "^${NAME}$" >/dev/null
             then
                 # we need to keep the flake directory path
@@ -705,7 +705,7 @@ then
         test -d "$i" || continue
         if [ -f "$i/flake.nix" ]
         then
-            for host in $(nix flake show --json "./${i}" | jq -r '.nixosConfigurations | keys[]')
+            for host in $(nix flake show --json --option allow-import-from-derivation true "./${i}" | jq -r '.nixosConfigurations | keys[]')
             do
                 test -n "${SINGLE_FLAKE}" && ! [ "$host" = "${SINGLE_FLAKE}" ] && continue
                 printf "%${PRETTY_OUT_COLUMN}s " "${host}"
@@ -749,7 +749,7 @@ then
     do
         if [ -f "$i/flake.nix" ]
         then
-            for host in $(nix flake show --json "./${i}" | jq -r '.nixosConfigurations | keys[]')
+            for host in $(nix flake show --json --option allow-import-from-derivation true "./${i}" | jq -r '.nixosConfigurations | keys[]')
             do
                 test -n "${SINGLE_FLAKE}" && ! [ "$host" = "${SINGLE_FLAKE}" ] && continue
                 deploy_files "$i" "${host}" "${host}"
